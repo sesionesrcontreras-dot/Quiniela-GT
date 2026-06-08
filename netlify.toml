@@ -1,0 +1,13 @@
+# Configuración de despliegue en Netlify.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Next 14 requiere Node >= 18.17. Usamos 20 (LTS).
+  NODE_VERSION = "20"
+
+# Runtime oficial de Next.js para Netlify (maneja SSR, rutas API, imágenes).
+# Netlify lo instala automáticamente al detectar este bloque.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

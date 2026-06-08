@@ -1,0 +1,81 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const METHODS = [
+  { value: "BANK_TRANSFER", label: "🏦 Transferencia bancaria" },
+  { value: "CARD_PAGGO", label: "💳 Tarjeta (Paggo)" },
+  { value: "CASH_AGENCY", label: "🏪 Efectivo en agencia" },
+];
+
+export default function RechargeForm() {
+  const router = useRouter();
+  const [amount, setAmount] = useState(100);
+  const [method, setMethod] = useState("BANK_TRANSFER");
+  const [reference, setReference] = useState("");
+  const [msg, setMsg] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setMsg("");
+    setLoading(true);
+    const res = await fetch("/api/payments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amountQuetzales: Number(amount), method, reference: reference || undefined }),
+    });
+    const data = await res.json();
+    setLoading(false);
+    if (!data.ok) return setError(data.error || "No se pudo crear la solicitud");
+    setMsg(data.data.instructions + " (Tu saldo se acreditará cuando el admin confirme el pago.)");
+    setReference("");
+    router.refresh();
+  }
+
+  return (
+    <form onSubmit={submit} className="card space-y-4">
+      <h3 className="font-bold">Recargar saldo</h3>
+      <div>
+        <label className="text-sm font-semibold">Monto (Q)</label>
+        <input
+          type="number"
+          min={1}
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          required
+        />
+      </div>
+      <div>
+        <label className="text-sm font-semibold">Método de pago</label>
+        <select
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          value={method}
+          onChange={(e) => setMethod(e.target.value)}
+        >
+          {METHODS.map((m) => (
+            <option key={m.value} value={m.value}>{m.label}</option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="text-sm font-semibold">Referencia / No. de boleta (opcional)</label>
+        <input
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          value={reference}
+          onChange={(e) => setReference(e.target.value)}
+          placeholder="Ej. No. de transferencia"
+        />
+      </div>
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {msg && <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{msg}</p>}
+      <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
+        {loading ? "Enviando..." : "Solicitar recarga"}
+      </button>
+    </form>
+  );
+}

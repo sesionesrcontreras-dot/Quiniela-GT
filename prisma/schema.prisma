@@ -1,0 +1,264 @@
+// ════════════════════════════════════════════════════════════════════════
+//  ESQUEMA DE BASE DE DATOS - Quiniela GT
+//
+//  Reglas de diseño financiero (MUY IMPORTANTE):
+//   1. El dinero NUNCA se guarda como decimal/float. Se guarda en CENTAVOS
+//      (enteros). Ej: Q50.00 => 5000. Esto elimina errores de redondeo.
+//   2. Todo movimiento de dinero pasa por el libro contable de PARTIDA DOBLE
+//      (modelos LedgerAccount / LedgerTransaction / LedgerEntry).
+//      La suma de cada transaccion SIEMPRE da cero (debe = haber).
+//   3. Los saldos NO se guardan como un campo editable: se CALCULAN sumando
+//      los asientos. Asi nadie puede "editar" un saldo a mano.
+//   4. Nada se borra: estados + AuditLog. Trazabilidad total.
+//
+//  NOTA: usamos SQLite en local (cero instalacion). SQLite no soporta `enum`,
+//  por eso los "enums" son campos String validados en codigo (ver lib/enums.ts).
+//  En produccion con PostgreSQL puedes convertirlos a enums nativos.
+// ════════════════════════════════════════════════════════════════════════
+
+generator client {
+  provider = "prisma-client-js"
+  // "native" = tu máquina local. Los "rhel-*" son para el entorno serverless
+  // de Netlify (AWS Lambda). Sin esto, Prisma falla en producción.
+  binaryTargets = ["native", "rhel-openssl-3.0.x", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  // PostgreSQL (producción y local). SQLite NO sirve en hosting serverless
+  // porque el disco es efímero y de solo lectura. Usa Neon/Supabase (gratis).
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── USUARIOS / AUTH ─────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  phone        String?
+  name         String
+  passwordHash String
+  role         String    @default("PLAYER") // PLAYER | ADMIN | FINANCE
+  dateOfBirth  DateTime? // para validar +18
+  kycStatus    String    @default("NONE") // NONE | PENDING | VERIFIED | REJECTED
+  isBlocked    Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  // relaciones
+  ledgerAccount LedgerAccount? // billetera del usuario (saldo = suma de asientos)
+  ownedPools    Pool[]         @relation("PoolOwner")
+  entries       Entry[]
+  payments      Payment[]
+  payouts       Payout[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+}
+
+// ───────────────────────────── TORNEO / PARTIDOS ───────────────────────────
+
+model Tournament {
+  id        String   @id @default(cuid())
+  name      String // "Mundial 2026"
+  startsAt  DateTime
+  endsAt    DateTime
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  matches   Match[]
+  pools     Pool[]
+}
+
+model Match {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  homeTeam     String
+  awayTeam     String
+  stage        String // "Fase de grupos", "Octavos", ...
+  kickoff      DateTime
+  status       String     @default("SCHEDULED") // SCHEDULED | LOCKED | FINISHED | CANCELLED
+  homeScore    Int?
+  awayScore    Int?
+  lockedAt     DateTime? // se bloquean predicciones desde aqui (default: kickoff)
+  createdAt    DateTime   @default(now())
+
+  predictions Prediction[]
+
+  @@index([tournamentId, kickoff])
+}
+
+// ───────────────────────────── QUINIELAS (POOLS) ───────────────────────────
+
+model Pool {
+  id           String     @id @default(cuid())
+  name         String
+  ownerId      String
+  owner        User       @relation("PoolOwner", fields: [ownerId], references: [id])
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  type         String     @default("PUBLIC") // PUBLIC | PRIVATE
+  status       String     @default("OPEN") // DRAFT | OPEN | CLOSED | SETTLED | CANCELLED
+
+  // economia de la quiniela (todo en centavos)
+  entryFeeCents     Int  @default(0) // cuota por boleto (0 = gratis)
+  rakePercent       Int  @default(12) // % de comision de la plataforma (0-100)
+  maxEntriesPerUser Int  @default(1) // entradas multiples = mas ingresos
+  maxParticipants   Int? // limite opcional
+
+  // reglas de puntaje (JSON serializado): { exact: 3, outcome: 1, ... }
+  scoringRules String @default("{\"exact\":3,\"outcome\":1}")
+
+  // reparto de premios: JSON con porcentajes por puesto, ej [60,30,10]
+  prizeSplit String @default("[60,30,10]")
+
+  inviteCode String?   @unique // para quinielas PRIVATE (invitar amigos)
+  createdAt  DateTime  @default(now())
+  closesAt   DateTime? // fecha de cierre de inscripciones
+
+  entries Entry[]
+  payouts Payout[]
+  escrow  LedgerAccount? // cuenta de garantia (pozo) de esta quiniela
+
+  @@index([type, status])
+}
+
+model Entry {
+  id        String   @id @default(cuid())
+  poolId    String
+  pool      Pool     @relation(fields: [poolId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  status    String   @default("PENDING_PAYMENT") // PENDING_PAYMENT | ACTIVE | REFUNDED | DISQUALIFIED
+  points    Int      @default(0) // cache de puntaje total (se recalcula)
+  createdAt DateTime @default(now())
+
+  predictions Prediction[]
+  payment     Payment?     @relation(fields: [paymentId], references: [id])
+  paymentId   String?
+
+  @@index([poolId, status])
+  @@index([userId])
+}
+
+model Prediction {
+  id            String   @id @default(cuid())
+  entryId       String
+  entry         Entry    @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  matchId       String
+  match         Match    @relation(fields: [matchId], references: [id])
+  predHome      Int
+  predAway      Int
+  pointsAwarded Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([entryId, matchId]) // una prediccion por partido por boleto
+  @@index([matchId])
+}
+
+// ════════════════════════════ DINERO / PAGOS ════════════════════════════
+
+model Payment {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation(fields: [userId], references: [id])
+  method        String // BANK_TRANSFER | CARD_PAGGO | CASH_AGENCY | WALLET
+  status        String    @default("PENDING") // PENDING | CONFIRMED | REJECTED | REFUNDED
+  amountCents   Int
+  reference     String? // boleta bancaria / id de Paggo
+  proofUrl      String? // URL del comprobante subido (transferencia/efectivo)
+  confirmedById String? // que admin lo confirmo (control interno)
+  confirmedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  entries Entry[]
+
+  @@index([status, method])
+  @@index([userId])
+}
+
+model Payout {
+  id          String    @id @default(cuid())
+  poolId      String
+  pool        Pool      @relation(fields: [poolId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  amountCents Int
+  position    Int // puesto en la tabla (1 = primer lugar)
+  status      String    @default("PENDING") // PENDING | PAID | CANCELLED
+  method      String? // como se pago el premio
+  paidAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([poolId])
+}
+
+// ════════════════ LIBRO CONTABLE DE PARTIDA DOBLE ════════════════
+//  El nucleo del control financiero. Cada peso que entra o sale del
+//  sistema queda registrado en al menos 2 asientos que suman cero.
+
+model LedgerAccount {
+  id   String @id @default(cuid())
+  // USER_WALLET | POOL_ESCROW | PLATFORM_REVENUE | PAYMENT_FEES
+  // CASH_BANK | BANK_ACCOUNT | PAGGO_GATEWAY | PROMO_BONUS
+  type String
+  name String
+  // dueño opcional: billetera de un usuario o escrow de una quiniela
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id])
+  poolId    String?  @unique
+  pool      Pool?    @relation(fields: [poolId], references: [id])
+  createdAt DateTime @default(now())
+
+  entries LedgerEntry[]
+
+  @@index([type])
+}
+
+model LedgerTransaction {
+  id String @id @default(cuid())
+  // DEPOSIT | ENTRY_FEE | RAKE | PAYOUT | REFUND | WITHDRAWAL | FEE | ADJUSTMENT
+  type        String
+  description String
+  reference   String? // id de Payment/Payout/Pool relacionado
+  createdById String? // quien origino el asiento
+  createdAt   DateTime @default(now())
+
+  entries LedgerEntry[]
+
+  @@index([type, createdAt])
+}
+
+model LedgerEntry {
+  id            String            @id @default(cuid())
+  transactionId String
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  accountId     String
+  account       LedgerAccount     @relation(fields: [accountId], references: [id])
+  // Convencion: debe (debit) positivo, haber (credit) negativo.
+  // Saldo de una cuenta = SUM(debitCents) - SUM(creditCents).
+  debitCents  Int      @default(0)
+  creditCents Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  @@index([accountId])
+  @@index([transactionId])
+}
+
+// ───────────────────────────── AUDITORIA ─────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id])
+  action    String // "PAYMENT_CONFIRMED", "RESULT_SET", "PAYOUT_RELEASED"...
+  entity    String // "Payment", "Match", "Pool"...
+  entityId  String?
+  metadata  String? // JSON con detalle (valor antes/despues)
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+}
