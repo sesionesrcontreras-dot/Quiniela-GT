@@ -67,23 +67,16 @@ export async function paggoCreateLink(params: {
     }),
   });
 
-  // La API devuelve la URL del link; el id puede venir con distintos nombres
-  // segun version. Si no viene, lo buscamos en el listado por URL.
-  const url: string | undefined = body.link ?? body.url ?? body.paymentLink ?? body.data?.link;
-  let linkId: string | undefined =
-    body.linkId ?? body.id ?? body.data?.linkId ?? body.data?.id;
-
-  if (!linkId && url) {
-    const list = await paggoFetch("/center/transactions/links", { method: "GET" });
-    const items: any[] = Array.isArray(list) ? list : list.links ?? list.data ?? [];
-    const found = items.find((l) => (l.link ?? l.url) === url);
-    if (found) linkId = found.id ?? found.linkId;
-  }
+  // Estructura real (verificada 2026-06-09):
+  // { transactionId, message, result: { id, link, expirationDate } }
+  const r = body.result ?? body.resul ?? body;
+  const url: string | undefined = r?.link;
+  const linkId = r?.id;
 
   if (!url || linkId == null) {
     throw new Error("Paggo: respuesta de create-link sin url/id reconocibles");
   }
-  return { linkId: String(linkId), url, expiresAt: body.expiration ?? body.expiresAt };
+  return { linkId: String(linkId), url, expiresAt: r.expirationDate };
 }
 
 export type PaggoStatus = "PENDING" | "PAID" | "CANCELLED" | "UNKNOWN";
@@ -91,7 +84,11 @@ export type PaggoStatus = "PENDING" | "PAID" | "CANCELLED" | "UNKNOWN";
 /** Consulta el estado de un link de pago. */
 export async function paggoGetLinkStatus(linkId: string): Promise<PaggoStatus> {
   const body = await paggoFetch(`/center/transactions/links/${linkId}`, { method: "GET" });
-  const raw = String(body.status ?? body.estado ?? body.data?.status ?? "").toLowerCase();
+  // La API envuelve la respuesta en "result" (a veces "resul"); el item puede
+  // venir como objeto o como arreglo de un elemento.
+  let r = body.result ?? body.resul ?? body;
+  if (Array.isArray(r)) r = r[0] ?? {};
+  const raw = String(r?.status ?? r?.estado ?? "").toLowerCase();
   if (raw.includes("paga")) return "PAID"; // "pagado"
   if (raw.includes("pend")) return "PENDING"; // "pendiente"
   if (raw.includes("cancel")) return "CANCELLED"; // "cancelado"
