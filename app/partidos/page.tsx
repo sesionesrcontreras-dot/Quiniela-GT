@@ -33,16 +33,16 @@ export default async function PartidosPage() {
     <>
       <Nav />
       <main className="container-app py-12">
-        <h1 className="text-3xl font-extrabold">Retos por partido</h1>
+        <h1 className="text-3xl font-black">Pronósticos por partido</h1>
         <p className="mt-2 max-w-2xl text-gray-600">
-          Elige UN partido, paga tu boleto de {formatGTQ(5000)}, predice el
+          Elige UN partido, paga tu boleto de {formatGTQ(5000)}, pronostica el
           marcador y llévate el pozo si eres quien más acierta. Marcador exacto
           gana sobre acertar solo el resultado; si hay empate, el pozo se divide.
         </p>
 
         {withPot.length === 0 ? (
           <div className="card mt-8 text-gray-600">
-            Por ahora no hay retos abiertos. Vuelve pronto.
+            Por ahora no hay pronósticos abiertos. Vuelve pronto.
           </div>
         ) : (
           <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -50,7 +50,7 @@ export default async function PartidosPage() {
               <div key={p.id} className="card flex flex-col">
                 <div className="flex items-center justify-between text-xs text-gray-500">
                   <span className="rounded-full bg-brand-50 px-3 py-1 font-bold text-brand-700">
-                    Reto por partido
+                    Pronóstico
                   </span>
                   <span>{p._count.entries} boletos</span>
                 </div>
@@ -59,19 +59,18 @@ export default async function PartidosPage() {
                 </h3>
                 <p className="text-sm text-gray-500">{fmt.format(p.match!.kickoff)} (hora GT)</p>
 
-                <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                  <div className="rounded-lg bg-gray-50 p-3">
-                    <div className="text-gray-500">Boleto</div>
-                    <div className="font-bold">{formatGTQ(p.entryFeeCents)}</div>
+                <div className="mt-4 flex items-end justify-between rounded-xl bg-night-900 px-4 py-3">
+                  <div>
+                    <div className="text-xs font-bold uppercase tracking-wide text-gold-500">Pozo</div>
+                    <div className="scoreboard-digits text-2xl font-black text-gold-300">{formatGTQ(p.pot)}</div>
                   </div>
-                  <div className="rounded-lg bg-brand-50 p-3">
-                    <div className="text-brand-700">Pozo actual</div>
-                    <div className="font-bold text-brand-700">{formatGTQ(p.pot)}</div>
+                  <div className="text-right text-xs text-gray-400">
+                    boleto<div className="text-sm font-bold text-gray-200">{formatGTQ(p.entryFeeCents)}</div>
                   </div>
                 </div>
 
                 <Link href={`/quiniela/${p.id}`} className="btn-primary mt-5 w-full">
-                  Predecir este partido
+                  Pronosticar este partido
                 </Link>
               </div>
             ))}

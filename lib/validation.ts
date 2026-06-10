@@ -66,6 +66,16 @@ export const createPaymentSchema = z.object({
   proofUrl: z.string().url().optional(),
 });
 
+export const withdrawalSchema = z.object({
+  amountQuetzales: z.number().positive().max(100000),
+  // banco + numero de cuenta + nombre del titular (texto libre validado)
+  bankInfo: z.string().min(10, "Indica banco, cuenta y titular").max(240),
+});
+
+export const championSchema = z.object({
+  team: z.string().min(2).max(60),
+});
+
 export const confirmPaymentSchema = z.object({
   paymentId: z.string().min(1),
   decision: z.enum(["CONFIRM", "REJECT"]),

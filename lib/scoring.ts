@@ -10,9 +10,11 @@ export interface ScoringRules {
   exact: number;
   outcome: number;
   goalDiff?: number;
+  /** bono por acertar el CAMPEON del torneo (prediccion general) */
+  champion?: number;
 }
 
-export const DEFAULT_RULES: ScoringRules = { exact: 3, outcome: 1 };
+export const DEFAULT_RULES: ScoringRules = { exact: 3, outcome: 1, champion: 10 };
 
 export function parseRules(json: string): ScoringRules {
   try {
@@ -21,6 +23,7 @@ export function parseRules(json: string): ScoringRules {
       exact: Number(r.exact ?? DEFAULT_RULES.exact),
       outcome: Number(r.outcome ?? DEFAULT_RULES.outcome),
       goalDiff: r.goalDiff != null ? Number(r.goalDiff) : undefined,
+      champion: r.champion != null ? Number(r.champion) : undefined,
     };
   } catch {
     return DEFAULT_RULES;

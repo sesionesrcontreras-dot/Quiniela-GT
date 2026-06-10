@@ -39,6 +39,7 @@ async function main() {
         tournamentId: tournament.id,
         type: "PUBLIC",
         entryFeeCents: feeCents,
+        matchId: null, // solo quinielas de torneo (los pronosticos tambien cuestan Q50)
         status: { in: ["OPEN", "CLOSED"] },
       },
     });
@@ -70,7 +71,7 @@ async function main() {
         rakePercent: RAKE_PERCENT,
         maxEntriesPerUser: 3,
         prizeSplit: JSON.stringify([60, 30, 10]),
-        scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
+        scoringRules: JSON.stringify({ exact: 3, outcome: 1, champion: 10 }),
       },
     });
     console.log(`+ Creado nivel Q${feeCents / 100}: "${pool.name}" (${pool.id})`);

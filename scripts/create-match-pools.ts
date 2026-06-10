@@ -32,7 +32,7 @@ async function main() {
 
     await prisma.pool.create({
       data: {
-        name: `Reto: ${m.homeTeam} vs ${m.awayTeam}`,
+        name: `Pronóstico: ${m.homeTeam} vs ${m.awayTeam}`,
         ownerId: admin.id,
         tournamentId: m.tournamentId,
         matchId: m.id,
@@ -47,10 +47,10 @@ async function main() {
       },
     });
     created++;
-    console.log(`+ Reto creado: ${m.homeTeam} vs ${m.awayTeam} (${m.kickoff.toISOString()})`);
+    console.log(`+ Pronóstico creado: ${m.homeTeam} vs ${m.awayTeam} (${m.kickoff.toISOString()})`);
   }
 
-  console.log(`Listo. Retos nuevos: ${created} / partidos futuros: ${matches.length}`);
+  console.log(`Listo. Pronósticos nuevos: ${created} / partidos futuros: ${matches.length}`);
 }
 
 main()

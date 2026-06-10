@@ -59,11 +59,12 @@ model User {
 // ───────────────────────────── TORNEO / PARTIDOS ───────────────────────────
 
 model Tournament {
-  id        String   @id @default(cuid())
-  name      String // "Mundial 2026"
-  startsAt  DateTime
-  endsAt    DateTime
-  isActive  Boolean  @default(true)
+  id           String   @id @default(cuid())
+  name         String // "Mundial 2026"
+  startsAt     DateTime
+  endsAt       DateTime
+  isActive     Boolean  @default(true)
+  championTeam String? // lo fija el admin al final; paga el bono de campeon
   createdAt DateTime @default(now())
   matches   Match[]
   pools     Pool[]
@@ -137,7 +138,10 @@ model Entry {
   user      User     @relation(fields: [userId], references: [id])
   status    String   @default("PENDING_PAYMENT") // PENDING_PAYMENT | ACTIVE | REFUNDED | DISQUALIFIED
   points    Int      @default(0) // cache de puntaje total (se recalcula)
-  createdAt DateTime @default(now())
+  // Prediccion general: quien sera el CAMPEON del torneo (bono de puntos).
+  // Se puede elegir/cambiar solo antes de que arranque el torneo.
+  championPick String?
+  createdAt    DateTime @default(now())
 
   predictions Prediction[]
   payment     Payment?     @relation(fields: [paymentId], references: [id])

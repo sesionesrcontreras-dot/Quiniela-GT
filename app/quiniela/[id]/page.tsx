@@ -8,6 +8,7 @@ import { formatGTQ } from "@/lib/money";
 import { parseRules } from "@/lib/scoring";
 import JoinPoolButton from "@/components/JoinPoolButton";
 import PredictionForm, { MatchRow } from "@/components/PredictionForm";
+import ChampionPick from "@/components/ChampionPick";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +42,7 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
   });
 
   // Boleto del usuario (si tiene)
-  let myEntry = null as null | { id: string };
+  let myEntry = null as null | { id: string; championPick: string | null };
   let predMap = new Map<string, { predHome: number; predAway: number; pointsAwarded: number }>();
   if (viewer) {
     const entry = await prisma.entry.findFirst({
@@ -49,10 +50,18 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
       include: { predictions: true },
     });
     if (entry) {
-      myEntry = { id: entry.id };
+      myEntry = { id: entry.id, championPick: entry.championPick };
       predMap = new Map(entry.predictions.map((p) => [p.matchId, p]));
     }
   }
+
+  // Equipos del torneo (para elegir campeon) y si la eleccion sigue abierta
+  const teams = pool.matchId
+    ? []
+    : [...new Set(pool.tournament.matches.flatMap((m) => [m.homeTeam, m.awayTeam]))].sort((a, b) =>
+        a.localeCompare(b, "es")
+      );
+  const championLocked = pool.tournament.startsAt <= new Date();
 
   const now = new Date();
   // Reto de un solo partido: solo se muestra y predice ese match.
@@ -87,8 +96,8 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
           <p className="text-gray-600">
             {pool.tournament.name} ·{" "}
             {pool.matchId
-              ? "Reto de un solo partido: acierta el marcador y llévate el pozo"
-              : `${pool.tournament.matches.length} partidos`}
+              ? "Pronóstico de un solo partido: acierta el marcador y llévate el pozo"
+              : `Predice el marcador de los ${pool.tournament.matches.length} partidos y a tu campeón del Mundial`}
           </p>
 
           <div className="mt-6">
@@ -101,10 +110,21 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
                 </div>
               </div>
             ) : myEntry ? (
-              <>
-                <h2 className="mb-3 text-lg font-bold">Tus predicciones</h2>
-                <PredictionForm entryId={myEntry.id} matches={matchRows} />
-              </>
+              <div className="space-y-6">
+                {!pool.matchId && (
+                  <ChampionPick
+                    entryId={myEntry.id}
+                    teams={teams}
+                    current={myEntry.championPick}
+                    locked={championLocked}
+                    bonusPoints={rules.champion ?? 10}
+                  />
+                )}
+                <div>
+                  <h2 className="mb-3 text-lg font-bold">Tus predicciones</h2>
+                  <PredictionForm entryId={myEntry.id} matches={matchRows} />
+                </div>
+              </div>
             ) : pool.status !== "OPEN" ? (
               <div className="card text-gray-600">Esta quiniela ya no admite inscripciones.</div>
             ) : (
@@ -135,6 +155,9 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
               <div className="flex justify-between"><dt className="text-gray-500">Comisión</dt><dd className="font-semibold">{pool.rakePercent}%</dd></div>
               <div className="flex justify-between"><dt className="text-gray-500">Marcador exacto</dt><dd className="font-semibold">{rules.exact} pts</dd></div>
               <div className="flex justify-between"><dt className="text-gray-500">Resultado</dt><dd className="font-semibold">{rules.outcome} pts</dd></div>
+              {!pool.matchId && rules.champion ? (
+                <div className="flex justify-between"><dt className="text-gray-500">Acertar campeón</dt><dd className="font-semibold">+{rules.champion} pts</dd></div>
+              ) : null}
               <div className="flex justify-between"><dt className="text-gray-500">Reparto</dt><dd className="font-semibold">{prizeSplit.join("/")}%</dd></div>
             </dl>
           </div>

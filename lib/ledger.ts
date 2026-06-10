@@ -265,6 +265,39 @@ export async function chargeEntryFee(
 }
 
 /**
+ * RETIRO: el jugador saca dinero de su billetera hacia su cuenta bancaria.
+ * Asiento: DEBE billetera (baja el pasivo) / HABER banco (sale dinero real).
+ * Valida saldo suficiente DENTRO de la transaccion.
+ */
+export async function recordWithdrawal(
+  db: Tx,
+  params: {
+    userId: string;
+    amountCents: number;
+    reference?: string;
+    createdById?: string;
+  }
+) {
+  const wallet = await getUserWallet(db, params.userId);
+  const available = -(await getBalance(db, wallet.id));
+  if (available < params.amountCents) {
+    throw new Error("Saldo insuficiente para el retiro");
+  }
+  const bank = await getSystemAccount(db, AccountType.BANK_ACCOUNT);
+
+  await postTransaction(db, {
+    type: TxType.WITHDRAWAL,
+    description: "Retiro a cuenta bancaria",
+    reference: params.reference,
+    createdById: params.createdById,
+    lines: [
+      { accountId: wallet.id, debitCents: params.amountCents },
+      { accountId: bank.id, creditCents: params.amountCents },
+    ],
+  });
+}
+
+/**
  * Reparte el pozo a los ganadores: mueve del escrow de la quiniela a las
  * billeteras de los ganadores. La suma de premios debe == saldo del pozo.
  */

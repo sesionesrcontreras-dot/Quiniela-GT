@@ -94,7 +94,7 @@ async function main() {
         rakePercent: 17,
         maxEntriesPerUser: 3,
         prizeSplit: JSON.stringify([60, 30, 10]),
-        scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
+        scoringRules: JSON.stringify({ exact: 3, outcome: 1, champion: 10 }),
       },
     });
   }

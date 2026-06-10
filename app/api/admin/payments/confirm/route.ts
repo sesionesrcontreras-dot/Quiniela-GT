@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { parse, confirmPaymentSchema } from "@/lib/validation";
-import { recordDeposit } from "@/lib/ledger";
+import { recordDeposit, recordWithdrawal } from "@/lib/ledger";
 import { toCents } from "@/lib/money";
 import { ok, fail, handleError, audit, getIp } from "@/lib/security";
 
@@ -36,17 +36,29 @@ export async function POST(req: Request) {
       return ok({ status: "REJECTED" });
     }
 
-    // CONFIRM: acreditar saldo en el ledger de forma atomica.
+    // CONFIRM: mover el dinero en el ledger de forma atomica.
+    //  - Deposito: el admin verifico que el dinero ENTRO -> acredita saldo.
+    //  - Retiro (WITHDRAWAL): el admin ya hizo la transferencia real al
+    //    jugador -> descuenta saldo (valida fondos dentro de la transaccion).
     const feeCents = data.feeQuetzales ? toCents(data.feeQuetzales) : 0;
     await prisma.$transaction(async (tx) => {
-      await recordDeposit(tx, {
-        userId: payment.userId,
-        method: payment.method,
-        amountCents: payment.amountCents,
-        feeCents,
-        reference: payment.id,
-        createdById: admin.uid,
-      });
+      if (payment.method === "WITHDRAWAL") {
+        await recordWithdrawal(tx, {
+          userId: payment.userId,
+          amountCents: payment.amountCents,
+          reference: payment.id,
+          createdById: admin.uid,
+        });
+      } else {
+        await recordDeposit(tx, {
+          userId: payment.userId,
+          method: payment.method,
+          amountCents: payment.amountCents,
+          feeCents,
+          reference: payment.id,
+          createdById: admin.uid,
+        });
+      }
       await tx.payment.update({
         where: { id: payment.id },
         data: { status: "CONFIRMED", confirmedById: admin.uid, confirmedAt: new Date() },

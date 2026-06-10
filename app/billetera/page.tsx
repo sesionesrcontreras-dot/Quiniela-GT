@@ -4,6 +4,7 @@ import { getViewer } from "@/lib/viewer";
 import { prisma } from "@/lib/prisma";
 import { formatGTQ } from "@/lib/money";
 import RechargeForm from "@/components/RechargeForm";
+import WithdrawForm from "@/components/WithdrawForm";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,7 @@ const methodLabel: Record<string, string> = {
   BANK_TRANSFER: "Transferencia",
   CARD_PAGGO: "Tarjeta (Paggo)",
   CASH_AGENCY: "Efectivo",
+  WITHDRAWAL: "Retiro",
 };
 
 export default async function BilleteraPage() {
@@ -40,9 +42,9 @@ export default async function BilleteraPage() {
             <div className="mt-1 text-4xl font-extrabold text-brand-700">{formatGTQ(viewer.balanceCents)}</div>
           </div>
 
-          <h2 className="mt-8 text-lg font-bold">Historial de recargas</h2>
+          <h2 className="mt-8 text-lg font-bold">Historial de movimientos</h2>
           {payments.length === 0 ? (
-            <p className="mt-3 text-sm text-gray-500">Aún no tienes recargas.</p>
+            <p className="mt-3 text-sm text-gray-500">Aún no tienes movimientos.</p>
           ) : (
             <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200">
               <table className="w-full text-sm">
@@ -80,14 +82,16 @@ export default async function BilleteraPage() {
           )}
         </div>
 
-        <div>
+        <div className="space-y-6">
           <RechargeForm />
-          <div className="card mt-6 bg-gray-50 text-sm text-gray-600">
+          <WithdrawForm maxQuetzales={viewer.balanceCents / 100} />
+          <div className="card bg-gray-50 text-sm text-gray-600">
             <p className="font-semibold text-ink">¿Cómo funciona?</p>
             <p className="mt-2">
-              Por seguridad, las recargas por transferencia o efectivo se acreditan
-              cuando un administrador verifica el comprobante. Con tarjeta (Paggo)
-              será automático al integrar el procesador.
+              Con tarjeta el saldo se acredita automáticamente. Las recargas por
+              transferencia o efectivo se acreditan cuando verificamos tu
+              comprobante. Los premios caen a esta billetera y los retiras por
+              transferencia a tu cuenta bancaria.
             </p>
           </div>
         </div>

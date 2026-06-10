@@ -26,8 +26,12 @@ export default async function PoolsPage() {
     <>
       <Nav />
       <main className="container-app py-12">
-        <h1 className="text-3xl font-extrabold">Quinielas disponibles</h1>
-        <p className="mt-2 text-gray-600">Elige una quiniela, predice los marcadores y gana el pozo.</p>
+        <h1 className="text-3xl font-black">Quinielas disponibles</h1>
+        <p className="mt-2 max-w-2xl text-gray-600">
+          En cada quiniela predices el marcador de los 27 partidos de la primera
+          ronda y a tu campeón del Mundial (+10 pts si la pegas). Los 3 mejores
+          puntajes se reparten el pozo: 60% / 30% / 10%.
+        </p>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {withPot.map((p) => (
@@ -39,16 +43,15 @@ export default async function PoolsPage() {
                 <span className="text-xs text-gray-400">{p._count.entries} participantes</span>
               </div>
               <h3 className="mt-3 text-lg font-bold">{p.name}</h3>
-              <p className="text-sm text-gray-500">{p.tournament.name}</p>
+              <p className="text-sm text-gray-500">27 partidos + tu campeón del Mundial</p>
 
-              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                <div className="rounded-lg bg-gray-50 p-3">
-                  <div className="text-gray-500">Cuota</div>
-                  <div className="font-bold">{p.entryFeeCents === 0 ? "Gratis" : formatGTQ(p.entryFeeCents)}</div>
+              <div className="mt-4 flex items-end justify-between rounded-xl bg-night-900 px-4 py-3">
+                <div>
+                  <div className="text-xs font-bold uppercase tracking-wide text-gold-500">Pozo actual</div>
+                  <div className="scoreboard-digits text-2xl font-black text-gold-300">{formatGTQ(p.pot)}</div>
                 </div>
-                <div className="rounded-lg bg-brand-50 p-3">
-                  <div className="text-brand-700">Pozo actual</div>
-                  <div className="font-bold text-brand-700">{formatGTQ(p.pot)}</div>
+                <div className="text-right text-xs text-gray-400">
+                  entrada<div className="text-sm font-bold text-gray-200">{p.entryFeeCents === 0 ? "Gratis" : formatGTQ(p.entryFeeCents)}</div>
                 </div>
               </div>
 

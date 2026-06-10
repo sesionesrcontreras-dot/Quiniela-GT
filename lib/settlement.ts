@@ -14,7 +14,10 @@ import { Prisma } from "@prisma/client";
  * para una quiniela. Solo cuenta partidos FINISHED.
  */
 export async function recalcPoolPoints(poolId: string) {
-  const pool = await prisma.pool.findUniqueOrThrow({ where: { id: poolId } });
+  const pool = await prisma.pool.findUniqueOrThrow({
+    where: { id: poolId },
+    include: { tournament: { select: { championTeam: true } } },
+  });
   const rules = parseRules(pool.scoringRules);
 
   const entries = await prisma.entry.findMany({
@@ -24,6 +27,16 @@ export async function recalcPoolPoints(poolId: string) {
 
   for (const entry of entries) {
     let total = 0;
+    // Bono por acertar el campeon del torneo (solo quinielas de torneo
+    // completo y cuando el admin ya registro al campeon).
+    if (
+      !pool.matchId &&
+      rules.champion &&
+      pool.tournament.championTeam &&
+      entry.championPick === pool.tournament.championTeam
+    ) {
+      total += rules.champion;
+    }
     for (const pred of entry.predictions) {
       if (
         pred.match.status === "FINISHED" &&
