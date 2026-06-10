@@ -19,7 +19,7 @@ const typeLabel: Record<string, string> = {
 export default async function PoolsPage() {
   const pools = await prisma.pool.findMany({
     where: { status: { in: ["OPEN", "CLOSED"] } },
-    orderBy: { createdAt: "asc" },
+    orderBy: [{ entryFeeCents: "asc" }, { createdAt: "asc" }],
     include: { _count: { select: { entries: true } }, tournament: true },
   });
 

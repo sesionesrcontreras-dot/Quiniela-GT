@@ -96,21 +96,23 @@ async function main() {
     },
   });
 
-  // Quiniela de PAGA (el motor de ingresos)
-  await prisma.pool.create({
-    data: {
-      name: "Quiniela Mundial 2026 — Pozo Q50",
-      ownerId: admin.id,
-      tournamentId: tournament.id,
-      type: "PUBLIC",
-      status: "OPEN",
-      entryFeeCents: 5000,
-      rakePercent: 12,
-      maxEntriesPerUser: 3,
-      prizeSplit: JSON.stringify([60, 30, 10]),
-      scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
-    },
-  });
+  // Quinielas de PAGA (el motor de ingresos): 4 niveles de entrada
+  for (const feeCents of [5000, 10000, 15000, 20000]) {
+    await prisma.pool.create({
+      data: {
+        name: `Quiniela Mundial 2026 — Entrada Q${feeCents / 100}`,
+        ownerId: admin.id,
+        tournamentId: tournament.id,
+        type: "PUBLIC",
+        status: "OPEN",
+        entryFeeCents: feeCents,
+        rakePercent: 12,
+        maxEntriesPerUser: 3,
+        prizeSplit: JSON.stringify([60, 30, 10]),
+        scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
+      },
+    });
+  }
 
   // Quiniela PRIVADA (grupo de amigos, por codigo de invitacion)
   await prisma.pool.create({
@@ -134,7 +136,7 @@ async function main() {
   console.log("  Admin:    admin@quiniela.gt / Password123");
   console.log("  Jugador:  ana@demo.gt       / Password123");
   console.log("  Jugador:  luis@demo.gt      / Password123");
-  console.log("  Quinielas: Gratis | Pozo Q50 | Privada amigos (código AMIGOS2026)");
+  console.log("  Quinielas: Gratis | Q50 | Q100 | Q150 | Q200 | Privada amigos (código AMIGOS2026)");
 }
 
 main()

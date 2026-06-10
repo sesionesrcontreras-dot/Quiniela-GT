@@ -12,6 +12,7 @@ export default function Home() {
           </div>
           <nav className="hidden gap-6 text-sm font-medium text-gray-600 sm:flex">
             <a href="#como" className="hover:text-ink">Como funciona</a>
+            <a href="#niveles" className="hover:text-ink">Niveles</a>
             <a href="#privadas" className="hover:text-ink">Con amigos</a>
             <a href="#pagos" className="hover:text-ink">Pagos</a>
             <a href="#seguridad" className="hover:text-ink">Seguridad</a>
@@ -61,7 +62,7 @@ export default function Home() {
                 </div>
               ))}
             </div>
-            <Link href="/pools" className="btn-primary mt-5 w-full">Participar (Q50)</Link>
+            <Link href="/pools" className="btn-primary mt-5 w-full">Participar desde Q50</Link>
           </div>
         </div>
       </section>
@@ -82,6 +83,53 @@ export default function Home() {
               <p className="mt-1 text-sm text-gray-600">{d}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* ───────────── Niveles de entrada ───────────── */}
+      <section id="niveles" className="bg-gray-50">
+        <div className="container-app py-20">
+          <h2 className="text-center text-3xl font-bold">Elige tu nivel de entrada</h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
+            Cuatro quinielas públicas con el mismo calendario del Mundial.
+            A mayor entrada, mayor pozo. Puedes jugar hasta 3 boletos por quiniela.
+          </p>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              ["Q50", "Para empezar", false],
+              ["Q100", "La más jugada", true],
+              ["Q150", "Pozo grande", false],
+              ["Q200", "Máximo premio", false],
+            ].map(([precio, tag, destacada]) => (
+              <div
+                key={precio as string}
+                className={`card flex flex-col items-center text-center ${
+                  destacada ? "border-2 border-brand-600" : ""
+                }`}
+              >
+                {destacada ? (
+                  <span className="rounded-full bg-brand-600 px-3 py-1 text-xs font-bold text-white">
+                    Popular
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-500">
+                    {tag}
+                  </span>
+                )}
+                <div className="mt-4 text-4xl font-extrabold text-brand-700">{precio}</div>
+                <div className="text-sm text-gray-500">por boleto</div>
+                <ul className="mt-4 space-y-2 text-sm text-gray-600">
+                  <li>✓ Premios a los 3 primeros</li>
+                  <li>✓ 60% / 30% / 10% del pozo</li>
+                  <li>✓ Hasta 3 boletos</li>
+                </ul>
+                <Link href="/pools" className="btn-primary mt-6 w-full">Entrar</Link>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-center text-sm text-gray-500">
+            ¿Primera vez? También hay una <Link href="/pools" className="font-semibold text-brand-700 underline">quiniela gratis</Link> para que pruebes la plataforma.
+          </p>
         </div>
       </section>
 
