@@ -55,7 +55,11 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
   }
 
   const now = new Date();
-  const matchRows: MatchRow[] = pool.tournament.matches.map((m) => {
+  // Reto de un solo partido: solo se muestra y predice ese match.
+  const poolMatches = pool.matchId
+    ? pool.tournament.matches.filter((m) => m.id === pool.matchId)
+    : pool.tournament.matches;
+  const matchRows: MatchRow[] = poolMatches.map((m) => {
     const locked = m.status !== "SCHEDULED" || (m.lockedAt ?? m.kickoff) <= now;
     const pred = predMap.get(m.id);
     return {
@@ -80,7 +84,12 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
         <div className="lg:col-span-2">
           <Link href="/pools" className="text-sm text-gray-500 hover:text-ink">← Todas las quinielas</Link>
           <h1 className="mt-2 text-3xl font-extrabold">{pool.name}</h1>
-          <p className="text-gray-600">{pool.tournament.name} · {pool.tournament.matches.length} partidos</p>
+          <p className="text-gray-600">
+            {pool.tournament.name} ·{" "}
+            {pool.matchId
+              ? "Reto de un solo partido: acierta el marcador y llévate el pozo"
+              : `${pool.tournament.matches.length} partidos`}
+          </p>
 
           <div className="mt-6">
             {!viewer ? (

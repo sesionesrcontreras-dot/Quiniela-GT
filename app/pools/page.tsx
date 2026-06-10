@@ -17,8 +17,9 @@ const typeLabel: Record<string, string> = {
 };
 
 export default async function PoolsPage() {
+  // Solo quinielas de torneo completo; los retos de un partido van en /partidos
   const pools = await prisma.pool.findMany({
-    where: { status: { in: ["OPEN", "CLOSED"] } },
+    where: { status: { in: ["OPEN", "CLOSED"] }, matchId: null },
     orderBy: [{ entryFeeCents: "asc" }, { createdAt: "asc" }],
     include: { _count: { select: { entries: true } }, tournament: true },
   });

@@ -17,6 +17,12 @@ export async function POST(req: Request) {
     if (entry.userId !== session.uid) return fail("Este boleto no es tuyo", 403);
     if (entry.status !== "ACTIVE") return fail("El boleto no esta activo", 409);
 
+    // En un reto de un solo partido, solo se acepta prediccion de ESE match.
+    if (entry.pool.matchId) {
+      const extra = data.predictions.find((p) => p.matchId !== entry.pool.matchId);
+      if (extra) return fail("Este reto solo admite prediccion del partido del reto", 400);
+    }
+
     // Solo se aceptan predicciones de partidos que aun NO han iniciado.
     const matchIds = data.predictions.map((p) => p.matchId);
     const matches = await prisma.match.findMany({

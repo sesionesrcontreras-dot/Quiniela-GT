@@ -84,6 +84,7 @@ model Match {
   createdAt    DateTime   @default(now())
 
   predictions Prediction[]
+  pools       Pool[] // retos de un solo partido que apuntan a este match
 
   @@index([tournamentId, kickoff])
 }
@@ -111,6 +112,11 @@ model Pool {
 
   // reparto de premios: JSON con porcentajes por puesto, ej [60,30,10]
   prizeSplit String @default("[60,30,10]")
+
+  // Si esta puesto, la quiniela es un RETO DE UN SOLO PARTIDO: solo se
+  // predice ese match y el pozo se reparte al terminar ese partido.
+  matchId String?
+  match   Match?  @relation(fields: [matchId], references: [id])
 
   inviteCode String?   @unique // para quinielas PRIVATE (invitar amigos)
   createdAt  DateTime  @default(now())

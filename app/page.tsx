@@ -1,10 +1,37 @@
 import Link from "next/link";
+import { prisma } from "@/lib/prisma";
+import { formatGTQ } from "@/lib/money";
+import Countdown from "@/components/Countdown";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+const fmt = new Intl.DateTimeFormat("es-GT", {
+  timeZone: "America/Guatemala",
+  weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+export default async function Home() {
+  // Datos REALES para que la pagina se sienta viva (nada inventado).
+  const upcoming = await prisma.match.findMany({
+    where: { status: "SCHEDULED", kickoff: { gt: new Date() } },
+    orderBy: { kickoff: "asc" },
+    take: 4,
+  });
+  const retos = await prisma.pool.findMany({
+    where: { matchId: { in: upcoming.map((m) => m.id) }, status: "OPEN" },
+    select: { id: true, matchId: true, entryFeeCents: true },
+  });
+  const retoByMatch = new Map(retos.map((r) => [r.matchId!, r]));
+  const firstKickoff = upcoming[0]?.kickoff ?? null;
+
   return (
     <main>
       {/* ───────────── Nav ───────────── */}
-      <header className="border-b border-gray-100">
+      <header className="sticky top-0 z-20 border-b border-gray-100 bg-white/90 backdrop-blur">
         <div className="container-app flex h-16 items-center justify-between">
           <div className="flex items-center gap-2 font-extrabold text-lg">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">⚽</span>
@@ -13,7 +40,7 @@ export default function Home() {
           <nav className="hidden gap-6 text-sm font-medium text-gray-600 sm:flex">
             <a href="#como" className="hover:text-ink">Como funciona</a>
             <a href="#niveles" className="hover:text-ink">Niveles</a>
-            <a href="#privadas" className="hover:text-ink">Con amigos</a>
+            <a href="#retos" className="hover:text-ink">Retos por partido</a>
             <a href="#pagos" className="hover:text-ink">Pagos</a>
             <a href="#seguridad" className="hover:text-ink">Seguridad</a>
           </nav>
@@ -25,40 +52,42 @@ export default function Home() {
       </header>
 
       {/* ───────────── Hero ───────────── */}
-      <section className="bg-gradient-to-b from-brand-50 to-white">
+      <section className="hero-gradient">
         <div className="container-app grid gap-10 py-20 lg:grid-cols-2 lg:items-center">
-          <div>
-            <span className="inline-block rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700">
+          <div className="animate-fade-up">
+            <span className="inline-block animate-float rounded-full bg-brand-100 px-3 py-1 text-xs font-bold text-brand-700">
               Rumbo al Mundial 2026 🇬🇹
             </span>
             <h1 className="mt-4 text-4xl font-extrabold leading-tight sm:text-5xl">
-              Crea tu quiniela del <span className="text-brand-600">Mundial</span> y juega con tus amigos
+              Predice el <span className="text-brand-600">Mundial</span> y llévate el pozo
             </h1>
             <p className="mt-4 text-lg text-gray-600">
-              Predice los marcadores, suma puntos y gana el pozo. Quinielas
-              públicas o privadas con tus amigos. Paga por transferencia, tarjeta
-              o efectivo en agencias bancarias.
+              Quinielas desde Q50 y retos de un solo partido. Predice los
+              marcadores, suma puntos y gana. Paga por transferencia, tarjeta o
+              efectivo en agencias bancarias.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/registro" className="btn-primary">Empezar gratis</Link>
-              <Link href="/pools" className="btn-ghost">Ver quinielas</Link>
+              <Link href="/registro" className="btn-primary">Crear cuenta y jugar</Link>
+              <Link href="/partidos" className="btn-ghost">Retar un partido</Link>
             </div>
             <p className="mt-4 text-xs text-gray-500">
               +18. Juega con responsabilidad. Plataforma con verificacion de identidad.
             </p>
           </div>
-          <div className="card">
-            <div className="text-sm font-semibold text-gray-500">Pozo actual</div>
-            <div className="text-4xl font-extrabold text-brand-700">Q 12,400</div>
-            <div className="mt-4 space-y-3">
-              {[
-                ["México", "Sudáfrica", "jue 11 jun"],
-                ["Brasil", "Marruecos", "sáb 13 jun"],
-                ["España", "Cabo Verde", "lun 15 jun"],
-              ].map(([h, a, t]) => (
-                <div key={h} className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm">
-                  <span className="font-semibold">{h} vs {a}</span>
-                  <span className="text-gray-500">{t}</span>
+          <div className="card animate-fade-up anim-delay-2">
+            {firstKickoff ? (
+              <>
+                <div className="text-sm font-semibold text-gray-500">El Mundial arranca en</div>
+                <div className="mt-3">
+                  <Countdown targetIso={firstKickoff.toISOString()} />
+                </div>
+              </>
+            ) : null}
+            <div className="mt-5 space-y-3">
+              {upcoming.slice(0, 3).map((m) => (
+                <div key={m.id} className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3 text-sm transition hover:bg-brand-50">
+                  <span className="font-semibold">{m.homeTeam} vs {m.awayTeam}</span>
+                  <span className="text-gray-500">{fmt.format(m.kickoff)}</span>
                 </div>
               ))}
             </div>
@@ -72,12 +101,12 @@ export default function Home() {
         <h2 className="text-center text-3xl font-bold">Como funciona</h2>
         <div className="mt-12 grid gap-6 md:grid-cols-4">
           {[
-            ["1", "Crea o entra", "Crea tu quiniela o unete a una publica/privada."],
-            ["2", "Recarga saldo", "Transferencia, tarjeta (Paggo) o efectivo en agencia."],
+            ["1", "Crea tu cuenta", "Registro en un minuto con tu correo."],
+            ["2", "Recarga saldo", "Transferencia, tarjeta o efectivo en agencia."],
             ["3", "Predice", "Marca los resultados antes de cada partido."],
             ["4", "Gana el pozo", "El sistema calcula puntos y reparte premios solo."],
-          ].map(([n, t, d]) => (
-            <div key={n} className="card">
+          ].map(([n, t, d], i) => (
+            <div key={n} className={`card animate-fade-up anim-delay-${i + 1}`}>
               <div className="grid h-10 w-10 place-items-center rounded-full bg-brand-600 font-bold text-white">{n}</div>
               <h3 className="mt-4 font-bold">{t}</h3>
               <p className="mt-1 text-sm text-gray-600">{d}</p>
@@ -100,10 +129,10 @@ export default function Home() {
               ["Q100", "La más jugada", true],
               ["Q150", "Pozo grande", false],
               ["Q200", "Máximo premio", false],
-            ].map(([precio, tag, destacada]) => (
+            ].map(([precio, tag, destacada], i) => (
               <div
                 key={precio as string}
-                className={`card flex flex-col items-center text-center ${
+                className={`card animate-fade-up anim-delay-${i + 1} flex flex-col items-center text-center ${
                   destacada ? "border-2 border-brand-600" : ""
                 }`}
               >
@@ -127,41 +156,45 @@ export default function Home() {
               </div>
             ))}
           </div>
-          <p className="mt-8 text-center text-sm text-gray-500">
-            ¿Primera vez? También hay una <Link href="/pools" className="font-semibold text-brand-700 underline">quiniela gratis</Link> para que pruebes la plataforma.
-          </p>
         </div>
       </section>
 
-      {/* ───────────── Quinielas privadas (con amigos) ───────────── */}
-      <section id="privadas" className="bg-ink text-white">
-        <div className="container-app grid gap-10 py-20 lg:grid-cols-2">
-          <div>
-            <h2 className="text-3xl font-bold">Crea tu quiniela privada con amigos</h2>
-            <p className="mt-4 text-gray-300">
-              Arma tu grupo, define la cuota y el premio, comparte un código de
-              invitación y compite con tus amigos durante todo el Mundial.
-            </p>
-            <ul className="mt-6 space-y-3 text-gray-200">
-              <li>✓ Grupo privado por código de invitación</li>
-              <li>✓ Tú defines la cuota y el reparto del premio</li>
-              <li>✓ Tabla de posiciones en vivo</li>
-              <li>✓ Premios automáticos y transparentes</li>
-            </ul>
-            <Link href="/registro" className="btn-primary mt-8">Crear mi quiniela</Link>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[
-              ["Comisión automática", "La plataforma retiene el rake del pozo en cada quiniela de paga."],
-              ["Entradas múltiples", "Cada jugador puede comprar varios boletos."],
-              ["Quinielas públicas", "Compite contra todo el país por el pozo."],
-              ["Premios al instante", "El sistema calcula y reparte solo, sin discusiones."],
-            ].map(([t, d]) => (
-              <div key={t} className="rounded-2xl border border-white/10 bg-white/5 p-5">
-                <h3 className="font-bold">{t}</h3>
-                <p className="mt-1 text-sm text-gray-400">{d}</p>
-              </div>
-            ))}
+      {/* ───────────── Retos por partido ───────────── */}
+      <section id="retos" className="bg-ink text-white">
+        <div className="container-app py-20">
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
+            <div>
+              <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-brand-100">
+                Nuevo · Pago único de Q50
+              </span>
+              <h2 className="mt-4 text-3xl font-bold">¿Solo te interesa UN partido? Rétalo.</h2>
+              <p className="mt-4 text-gray-300">
+                Elige el partido, paga tu boleto de Q50, predice el marcador y
+                llévate el pozo completo si eres quien más acierta. Marcador
+                exacto manda; si hay empate, el pozo se divide entre los ganadores.
+              </p>
+              <Link href="/partidos" className="btn-primary mt-8 inline-flex">Ver retos disponibles</Link>
+            </div>
+            <div className="space-y-3">
+              {upcoming.map((m) => {
+                const reto = retoByMatch.get(m.id);
+                return (
+                  <Link
+                    key={m.id}
+                    href={reto ? `/quiniela/${reto.id}` : "/partidos"}
+                    className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-5 py-4 transition hover:border-brand-500 hover:bg-white/10"
+                  >
+                    <div>
+                      <div className="font-bold">{m.homeTeam} vs {m.awayTeam}</div>
+                      <div className="text-xs text-gray-400">{fmt.format(m.kickoff)} (hora GT)</div>
+                    </div>
+                    <span className="rounded-full bg-brand-600 px-3 py-1 text-xs font-bold">
+                      {reto ? `Retar · ${formatGTQ(reto.entryFeeCents)}` : "Ver"}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -172,10 +205,10 @@ export default function Home() {
         <div className="mt-12 grid gap-6 md:grid-cols-3">
           {[
             ["🏦", "Transferencia bancaria", "Sube tu comprobante. Acreditamos al verificar."],
-            ["💳", "Tarjeta (Paggo)", "Pago seguro con tarjeta via procesador Paggo."],
+            ["💳", "Tarjeta", "Pago seguro con tarjeta via procesador local."],
             ["🏪", "Efectivo en agencia", "Paga en agencias bancarias con tu codigo."],
-          ].map(([i, t, d]) => (
-            <div key={t} className="card text-center">
+          ].map(([i, t, d], idx) => (
+            <div key={t} className={`card animate-fade-up anim-delay-${idx + 1} text-center`}>
               <div className="text-4xl">{i}</div>
               <h3 className="mt-3 font-bold">{t}</h3>
               <p className="mt-1 text-sm text-gray-600">{d}</p>

@@ -11,6 +11,7 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:tiers": "tsx scripts/create-tiers.ts",
+    "db:retos": "tsx scripts/create-match-pools.ts",
     "db:reset": "prisma db push --force-reset && tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate"

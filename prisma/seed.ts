@@ -80,23 +80,8 @@ async function main() {
     include: { matches: true },
   });
 
-  // Quiniela GRATIS (captacion de usuarios)
-  await prisma.pool.create({
-    data: {
-      name: "Quiniela Mundial 2026 — Gratis",
-      ownerId: admin.id,
-      tournamentId: tournament.id,
-      type: "PUBLIC",
-      status: "OPEN",
-      entryFeeCents: 0,
-      rakePercent: 0,
-      maxEntriesPerUser: 1,
-      prizeSplit: JSON.stringify([100]),
-      scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
-    },
-  });
-
   // Quinielas de PAGA (el motor de ingresos): 4 niveles de entrada
+  // Rake 17% = 5% del procesador de pagos + 12% de margen neto minimo.
   for (const feeCents of [5000, 10000, 15000, 20000]) {
     await prisma.pool.create({
       data: {
@@ -106,7 +91,7 @@ async function main() {
         type: "PUBLIC",
         status: "OPEN",
         entryFeeCents: feeCents,
-        rakePercent: 12,
+        rakePercent: 17,
         maxEntriesPerUser: 3,
         prizeSplit: JSON.stringify([60, 30, 10]),
         scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
@@ -114,29 +99,12 @@ async function main() {
     });
   }
 
-  // Quiniela PRIVADA (grupo de amigos, por codigo de invitacion)
-  await prisma.pool.create({
-    data: {
-      name: "Quiniela entre amigos",
-      ownerId: admin.id,
-      tournamentId: tournament.id,
-      type: "PRIVATE",
-      status: "OPEN",
-      entryFeeCents: 2500,
-      rakePercent: 10,
-      maxEntriesPerUser: 1,
-      prizeSplit: JSON.stringify([70, 30]),
-      scoringRules: JSON.stringify({ exact: 3, outcome: 1, goalDiff: 1 }),
-      inviteCode: "AMIGOS2026",
-    },
-  });
-
   console.log("Listo.");
   console.log(`  Partidos reales cargados: ${tournament.matches.length}`);
   console.log("  Admin:    admin@quiniela.gt / Password123");
   console.log("  Jugador:  ana@demo.gt       / Password123");
   console.log("  Jugador:  luis@demo.gt      / Password123");
-  console.log("  Quinielas: Gratis | Q50 | Q100 | Q150 | Q200 | Privada amigos (código AMIGOS2026)");
+  console.log("  Quinielas: Q50 | Q100 | Q150 | Q200 (corre db:retos para los retos por partido)");
 }
 
 main()

@@ -13,6 +13,9 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const pool = await prisma.pool.findUnique({ where: { id: poolId } });
     if (!pool) return fail("Quiniela no encontrada", 404);
     if (pool.status !== "OPEN") return fail("La quiniela no admite inscripciones", 409);
+    if (pool.closesAt && pool.closesAt <= new Date()) {
+      return fail("Las inscripciones ya cerraron (el partido esta por iniciar)", 409);
+    }
 
     // Codigo de invitacion para privadas/corporativas.
     if (pool.type !== "PUBLIC" && pool.inviteCode !== body.inviteCode) {

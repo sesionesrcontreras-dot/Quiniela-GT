@@ -18,6 +18,7 @@ export default async function Nav() {
 
         <nav className="hidden gap-6 text-sm font-medium text-gray-600 sm:flex">
           <Link href="/pools" className="hover:text-ink">Quinielas</Link>
+          <Link href="/partidos" className="hover:text-ink">Retos por partido</Link>
           {viewer && <Link href="/inicio" className="hover:text-ink">Inicio</Link>}
           {viewer && <Link href="/billetera" className="hover:text-ink">Billetera</Link>}
           {isAdmin && <Link href="/admin" className="font-semibold text-brand-700 hover:text-brand-900">Admin</Link>}

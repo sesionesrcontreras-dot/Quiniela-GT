@@ -10,6 +10,9 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+// 17% = 5% que cobra el procesador de pagos + 12% de margen neto minimo.
+const RAKE_PERCENT = 17;
+
 // [cuota en centavos, nombre]
 const TIERS: [number, string][] = [
   [5000, "Quiniela Mundial 2026 — Entrada Q50"],
@@ -38,9 +41,17 @@ async function main() {
       },
     });
     if (existing) {
-      if (existing.name !== name) {
-        await prisma.pool.update({ where: { id: existing.id }, data: { name } });
-        console.log(`~ Renombrado nivel Q${feeCents / 100}: "${existing.name}" -> "${name}"`);
+      // Normaliza nombre y rake, pero el rake SOLO si nadie ha pagado aun
+      // (cambiar la comision con boletos vendidos seria injusto).
+      const activeEntries = await prisma.entry.count({
+        where: { poolId: existing.id, status: "ACTIVE" },
+      });
+      const data: { name?: string; rakePercent?: number } = {};
+      if (existing.name !== name) data.name = name;
+      if (existing.rakePercent !== RAKE_PERCENT && activeEntries === 0) data.rakePercent = RAKE_PERCENT;
+      if (Object.keys(data).length > 0) {
+        await prisma.pool.update({ where: { id: existing.id }, data });
+        console.log(`~ Actualizado nivel Q${feeCents / 100}: ${JSON.stringify(data)}`);
       } else {
         console.log(`✓ Ya existe nivel Q${feeCents / 100}: "${existing.name}" (${existing.id})`);
       }
@@ -54,7 +65,7 @@ async function main() {
         type: "PUBLIC",
         status: "OPEN",
         entryFeeCents: feeCents,
-        rakePercent: 12,
+        rakePercent: RAKE_PERCENT,
         maxEntriesPerUser: 3,
         prizeSplit: JSON.stringify([60, 30, 10]),
         scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
