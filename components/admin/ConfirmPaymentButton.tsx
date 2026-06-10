@@ -30,7 +30,7 @@ export default function ConfirmPaymentButton({ paymentId }: { paymentId: string 
       <button
         disabled={loading}
         onClick={() => act("REJECT")}
-        className="rounded-lg border border-gray-300 px-3 py-1 text-xs font-semibold hover:bg-gray-50 disabled:opacity-60"
+        className="rounded-lg border border-white/20 px-3 py-1 text-xs font-semibold text-gray-200 hover:bg-white/5 disabled:opacity-60"
       >
         Rechazar
       </button>

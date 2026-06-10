@@ -92,7 +92,7 @@ async function main() {
         status: "OPEN",
         entryFeeCents: feeCents,
         rakePercent: 17,
-        maxEntriesPerUser: 3,
+        maxEntriesPerUser: 1,
         prizeSplit: JSON.stringify([60, 30, 10]),
         scoringRules: JSON.stringify({ exact: 3, outcome: 1, champion: 10 }),
       },

@@ -27,22 +27,22 @@ export default async function InicioPage() {
     <>
       <Nav />
       <main className="container-app py-12">
-        <h1 className="text-3xl font-extrabold">Hola, {viewer.user.name.split(" ")[0]} 👋</h1>
+        <h1 className="text-3xl font-black">Hola, {viewer.user.name.split(" ")[0]} 👋</h1>
 
         <div className="mt-6 grid gap-6 sm:grid-cols-3">
           <div className="card">
-            <div className="text-sm text-gray-500">Saldo en billetera</div>
-            <div className="mt-1 text-3xl font-extrabold text-brand-700">{formatGTQ(viewer.balanceCents)}</div>
-            <Link href="/billetera" className="btn-primary mt-4 w-full text-sm">Recargar saldo</Link>
+            <div className="text-xs font-bold uppercase tracking-wide text-gold-500">Saldo en billetera</div>
+            <div className="scoreboard-digits mt-1 text-3xl font-black text-gold-300">{formatGTQ(viewer.balanceCents)}</div>
+            <Link href="/billetera" className="btn-gold mt-4 w-full text-sm">Recargar saldo</Link>
           </div>
           <div className="card">
-            <div className="text-sm text-gray-500">Mis quinielas</div>
-            <div className="mt-1 text-3xl font-extrabold">{entries.length}</div>
+            <div className="text-xs font-bold uppercase tracking-wide text-gray-400">Mis quinielas</div>
+            <div className="mt-1 text-3xl font-black">{entries.length}</div>
             <Link href="/pools" className="btn-ghost mt-4 w-full text-sm">Buscar más quinielas</Link>
           </div>
           <div className="card">
-            <div className="text-sm text-gray-500">Premios ganados</div>
-            <div className="mt-1 text-3xl font-extrabold text-brand-700">
+            <div className="text-xs font-bold uppercase tracking-wide text-gold-500">Premios ganados</div>
+            <div className="scoreboard-digits mt-1 text-3xl font-black text-gold-300">
               {formatGTQ(payouts.reduce((a, p) => a + p.amountCents, 0))}
             </div>
             <div className="mt-4 text-xs text-gray-400">{payouts.length} premio(s)</div>
@@ -51,31 +51,31 @@ export default async function InicioPage() {
 
         <h2 className="mt-12 text-xl font-bold">Mis boletos</h2>
         {entries.length === 0 ? (
-          <p className="mt-3 text-gray-500">
+          <p className="mt-3 text-gray-400">
             Aún no participas en ninguna quiniela.{" "}
-            <Link href="/pools" className="font-semibold text-brand-700">Ver quinielas</Link>
+            <Link href="/pools" className="font-semibold text-gold-300">Ver quinielas</Link>
           </p>
         ) : (
-          <div className="mt-4 overflow-hidden rounded-2xl border border-gray-200">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-gray-500">
+          <div className="table-wrap mt-4">
+            <table className="table-app">
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Quiniela</th>
-                  <th className="px-4 py-3">Estado</th>
-                  <th className="px-4 py-3">Puntos</th>
-                  <th className="px-4 py-3"></th>
+                  <th>Quiniela</th>
+                  <th>Estado</th>
+                  <th>Puntos</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {entries.map((e) => (
-                  <tr key={e.id} className="border-t border-gray-100">
-                    <td className="px-4 py-3 font-semibold">{e.pool.name}</td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs">{e.status}</span>
+                  <tr key={e.id}>
+                    <td className="font-semibold">{e.pool.name}</td>
+                    <td>
+                      <span className="rounded-full bg-white/10 px-2 py-1 text-xs text-gray-300">{e.status}</span>
                     </td>
-                    <td className="px-4 py-3 font-bold">{e.points}</td>
-                    <td className="px-4 py-3 text-right">
-                      <Link href={`/quiniela/${e.poolId}`} className="font-semibold text-brand-700">
+                    <td className="font-bold">{e.points}</td>
+                    <td className="text-right">
+                      <Link href={`/quiniela/${e.poolId}`} className="font-semibold text-gold-300">
                         Abrir
                       </Link>
                     </td>

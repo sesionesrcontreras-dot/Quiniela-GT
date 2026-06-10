@@ -10,7 +10,7 @@ export default function LogoutButton() {
     router.refresh();
   }
   return (
-    <button onClick={logout} className="text-sm font-semibold text-gray-600 hover:text-ink">
+    <button onClick={logout} className="text-sm font-semibold text-gray-400 hover:text-white">
       Salir
     </button>
   );

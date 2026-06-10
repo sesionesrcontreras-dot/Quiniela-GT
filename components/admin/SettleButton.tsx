@@ -9,7 +9,13 @@ export default function SettleButton({ poolId }: { poolId: string }) {
   const [msg, setMsg] = useState("");
 
   async function settle() {
-    if (!confirm("¿Liquidar esta quiniela y repartir el pozo a los ganadores?")) return;
+    if (
+      !confirm(
+        "LIQUIDAR es IRREVERSIBLE: reparte el pozo a los ganadores y cierra la quiniela.\n\n" +
+          "Hazlo SOLO cuando ya cargaste el resultado de TODOS los partidos.\n\n¿Continuar?"
+      )
+    )
+      return;
     setLoading(true);
     const res = await fetch(`/api/admin/pools/${poolId}/settle`, { method: "POST" });
     const data = await res.json();
@@ -20,10 +26,10 @@ export default function SettleButton({ poolId }: { poolId: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <button onClick={settle} disabled={loading} className="rounded-lg border border-brand-600 px-3 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-50 disabled:opacity-60">
+      <button onClick={settle} disabled={loading} className="rounded-lg border border-gold-600/60 px-3 py-1 text-xs font-semibold text-gold-300 hover:bg-gold-400/10 disabled:opacity-60">
         {loading ? "..." : "Liquidar"}
       </button>
-      {msg && <span className="text-xs text-gray-500">{msg}</span>}
+      {msg && <span className="text-xs text-gray-400">{msg}</span>}
     </div>
   );
 }

@@ -12,7 +12,7 @@ function S({ n, title, children }: { n: number; title: string; children: React.R
   return (
     <section className="mt-8">
       <h2 className="text-xl font-bold">{n}. {title}</h2>
-      <div className="mt-2 space-y-2 text-gray-700">{children}</div>
+      <div className="mt-2 space-y-2 text-gray-300">{children}</div>
     </section>
   );
 }
@@ -23,9 +23,9 @@ export default function TerminosPage() {
       <Nav />
       <main className="container-app max-w-3xl py-12">
         <h1 className="text-3xl font-extrabold">Términos y Condiciones</h1>
-        <p className="mt-2 text-sm text-gray-500">Vigentes desde el {VIGENCIA} · Quiniela GT, Guatemala</p>
+        <p className="mt-2 text-sm text-gray-400">Vigentes desde el {VIGENCIA} · Quiniela GT, Guatemala</p>
 
-        <p className="mt-6 text-gray-700">
+        <p className="mt-6 text-gray-300">
           Al crear una cuenta o usar Quiniela GT (el “Servicio”) aceptas estos
           Términos y Condiciones en su totalidad. Si no estás de acuerdo, no
           uses el Servicio.
@@ -175,19 +175,19 @@ export default function TerminosPage() {
             Estos términos se rigen por las leyes de la República de Guatemala
             y cualquier controversia se someterá a los tribunales competentes
             de la Ciudad de Guatemala. Contacto:{" "}
-            <a className="font-semibold text-brand-700" href="mailto:sesiones.rcontreras@icloud.com">
+            <a className="font-semibold text-gold-300" href="mailto:sesiones.rcontreras@icloud.com">
               sesiones.rcontreras@icloud.com
             </a>.
           </p>
         </S>
 
-        <div className="mt-12 rounded-xl bg-brand-50 p-4 text-sm text-brand-900">
+        <div className="mt-12 rounded-xl border border-brand-600/30 bg-brand-500/10 p-4 text-sm text-brand-200">
           +18. Juega con responsabilidad. Al registrarte confirmas que leíste y
           aceptas estos Términos y Condiciones.
         </div>
 
         <p className="mt-8">
-          <Link href="/" className="text-sm font-semibold text-brand-700">← Volver al inicio</Link>
+          <Link href="/" className="text-sm font-semibold text-gold-300">← Volver al inicio</Link>
         </p>
       </main>
     </>

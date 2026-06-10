@@ -36,14 +36,14 @@ export default function SetResultForm({
   return (
     <div className="flex items-center gap-2">
       <span className="flex-1 text-right text-sm">{homeTeam}</span>
-      <input type="number" min={0} value={home} onChange={(e) => setHome(e.target.value)} className="w-12 rounded border border-gray-300 px-1 py-0.5 text-center" />
-      <span className="text-gray-400">-</span>
-      <input type="number" min={0} value={away} onChange={(e) => setAway(e.target.value)} className="w-12 rounded border border-gray-300 px-1 py-0.5 text-center" />
+      <input type="number" min={0} value={home} onChange={(e) => setHome(e.target.value)} className="w-12 rounded border border-white/15 bg-night-950 px-1 py-0.5 text-center text-cream" />
+      <span className="text-gray-500">-</span>
+      <input type="number" min={0} value={away} onChange={(e) => setAway(e.target.value)} className="w-12 rounded border border-white/15 bg-night-950 px-1 py-0.5 text-center text-cream" />
       <span className="flex-1 text-sm">{awayTeam}</span>
-      <button onClick={save} disabled={loading} className="rounded-lg bg-brand-600 px-3 py-1 text-xs font-semibold text-white disabled:opacity-60">
+      <button onClick={save} disabled={loading} className="rounded-lg bg-brand-600 px-3 py-1 text-xs font-semibold text-white hover:bg-brand-500 disabled:opacity-60">
         {loading ? "..." : "Guardar"}
       </button>
-      {error && <span className="text-xs text-red-600">{error}</span>}
+      {error && <span className="text-xs text-red-400">{error}</span>}
     </div>
   );
 }

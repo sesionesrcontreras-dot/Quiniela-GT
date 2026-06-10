@@ -26,8 +26,8 @@ export default async function PoolsPage() {
     <>
       <Nav />
       <main className="container-app py-12">
-        <h1 className="text-3xl font-black">Quinielas disponibles</h1>
-        <p className="mt-2 max-w-2xl text-gray-600">
+        <h1 className="text-3xl font-black sm:text-4xl">Quinielas disponibles</h1>
+        <p className="mt-2 max-w-2xl text-gray-400">
           En cada quiniela predices el marcador de los 27 partidos de la primera
           ronda y a tu campeón del Mundial (+10 pts si la pegas). Los 3 mejores
           puntajes se reparten el pozo: 60% / 30% / 10%.
@@ -35,17 +35,17 @@ export default async function PoolsPage() {
 
         <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {withPot.map((p) => (
-            <div key={p.id} className="card flex flex-col">
+            <div key={p.id} className="card flex flex-col hover:-translate-y-0.5 hover:border-brand-400/50">
               <div className="flex items-center justify-between">
-                <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-600">
+                <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-gray-300">
                   {typeLabel[p.type] ?? p.type}
                 </span>
                 <span className="text-xs text-gray-400">{p._count.entries} participantes</span>
               </div>
               <h3 className="mt-3 text-lg font-bold">{p.name}</h3>
-              <p className="text-sm text-gray-500">27 partidos + tu campeón del Mundial</p>
+              <p className="text-sm text-gray-400">27 partidos + tu campeón del Mundial</p>
 
-              <div className="mt-4 flex items-end justify-between rounded-xl bg-night-900 px-4 py-3">
+              <div className="money-panel mt-4 flex items-end justify-between">
                 <div>
                   <div className="text-xs font-bold uppercase tracking-wide text-gold-500">Pozo actual</div>
                   <div className="scoreboard-digits text-2xl font-black text-gold-300">{formatGTQ(p.pot)}</div>

@@ -2,22 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg: #0a0f0d;
-}
-
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-white text-ink antialiased;
+  @apply bg-night-950 text-cream antialiased;
 }
 
 .container-app {
   @apply mx-auto max-w-6xl px-4 sm:px-6 lg:px-8;
 }
 
+/* ───────────── Botones ───────────── */
 .btn {
   @apply inline-flex items-center justify-center rounded-lg px-5 py-3 font-semibold transition;
 }
@@ -25,9 +22,9 @@ body {
   @apply btn bg-brand-600 text-white hover:bg-brand-500;
 }
 .btn-ghost {
-  @apply btn border border-gray-300 text-ink hover:bg-gray-50;
+  @apply btn border border-white/15 text-cream hover:border-brand-400 hover:text-brand-300;
 }
-/* boton dorado: la accion de jugar / dinero (landing oscura) */
+/* boton dorado: la accion de jugar / dinero */
 .btn-gold {
   @apply btn bg-gold-400 text-night-950 hover:bg-gold-300;
 }
@@ -35,12 +32,63 @@ body {
 .btn-night {
   @apply btn border border-white/20 text-cream hover:border-gold-400 hover:text-gold-300;
 }
+
+/* ───────────── Superficies ───────────── */
 .card {
-  @apply rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg;
+  @apply rounded-2xl border border-white/10 bg-night-900 p-6 transition duration-300;
+}
+/* panel secundario dentro de una card (reemplaza los grises claros) */
+.surface {
+  @apply rounded-xl bg-white/5;
+}
+/* panel del POZO / dinero: fondo mas profundo para que resalte el dorado */
+.money-panel {
+  @apply rounded-xl bg-night-950 px-4 py-3;
 }
 
-/* ───────── Animaciones (landing dinámica) ───────── */
+/* ───────────── Formularios ───────────── */
+.field {
+  @apply w-full rounded-lg border border-white/15 bg-night-800 px-3 py-2 text-cream placeholder-gray-500 focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400;
+}
+.label {
+  @apply text-sm font-semibold text-gray-200;
+}
 
+/* mensajes */
+.pill-error {
+  @apply rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-300;
+}
+.pill-ok {
+  @apply rounded-lg bg-brand-500/15 px-3 py-2 text-sm text-brand-300;
+}
+
+/* ───────────── Tablas ───────────── */
+.table-wrap {
+  @apply overflow-hidden rounded-2xl border border-white/10;
+}
+.table-app {
+  @apply w-full text-sm;
+}
+.table-app thead {
+  @apply bg-white/5 text-left text-gray-400;
+}
+.table-app th {
+  @apply px-4 py-3 font-semibold;
+}
+.table-app td {
+  @apply px-4 py-3;
+}
+.table-app tbody tr {
+  @apply border-t border-white/10;
+}
+
+/* digitos de marcador (pozo): tabulares para que no bailen al animar */
+.scoreboard-digits {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* ───────────── Animaciones ───────────── */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: none; }
@@ -57,8 +105,7 @@ body {
 }
 .animate-float { animation: float-y 3.5s ease-in-out infinite; }
 
-/* Estadio de noche: cesped oscuro con el bañado de luz de los reflectores
-   cayendo desde arriba. Una sola escena, sin neon. */
+/* Estadio de noche: cesped oscuro con el bañado de luz de los reflectores. */
 .stadium-night {
   background-color: #060f0a;
   background-image:
@@ -76,12 +123,6 @@ body {
     transparent 1px,
     transparent 96px
   );
-}
-
-/* digitos de marcador (pozo): tabulares para que no bailen al animar */
-.scoreboard-digits {
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -40,7 +40,7 @@ async function main() {
         status: "OPEN",
         entryFeeCents: ENTRY_FEE_CENTS,
         rakePercent: RAKE_PERCENT,
-        maxEntriesPerUser: 3, // hasta 3 marcadores distintos por jugador
+        maxEntriesPerUser: 1, // un boleto por jugador por pronostico
         prizeSplit: JSON.stringify([100]), // el pozo completo al mejor puntaje
         scoringRules: JSON.stringify({ exact: 3, outcome: 1 }),
         closesAt: m.kickoff,

@@ -29,31 +29,31 @@ export default function LoginForm() {
   return (
     <form onSubmit={submit} className="card space-y-4">
       <div>
-        <label className="text-sm font-semibold">Correo</label>
+        <label className="label">Correo</label>
         <input
           type="email"
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          className="field mt-1"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           required
         />
       </div>
       <div>
-        <label className="text-sm font-semibold">Contraseña</label>
+        <label className="label">Contraseña</label>
         <input
           type="password"
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          className="field mt-1"
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
         />
       </div>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="pill-error">{error}</p>}
       <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
         {loading ? "Ingresando..." : "Ingresar"}
       </button>
-      <p className="text-center text-sm text-gray-500">
-        ¿No tienes cuenta? <Link href="/registro" className="font-semibold text-brand-700">Crear cuenta</Link>
+      <p className="text-center text-sm text-gray-400">
+        ¿No tienes cuenta? <Link href="/registro" className="font-semibold text-brand-400">Crear cuenta</Link>
       </p>
     </form>
   );

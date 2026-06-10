@@ -41,18 +41,18 @@ export default function JoinPoolButton({
     <div className="space-y-3">
       {requiresCode && (
         <input
-          className="w-full rounded-lg border border-gray-300 px-3 py-2"
+          className="field"
           placeholder="Código de invitación"
           value={code}
           onChange={(e) => setCode(e.target.value)}
         />
       )}
-      <button disabled={loading} onClick={join} className="btn-primary w-full disabled:opacity-60">
+      <button disabled={loading} onClick={join} className="btn-gold w-full disabled:opacity-60">
         {loading ? "Procesando..." : entryFeeCents > 0 ? "Participar (se cobra de tu saldo)" : "Participar gratis"}
       </button>
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      {error && <p className="pill-error">{error}</p>}
       {needFunds && (
-        <Link href="/billetera" className="block text-center text-sm font-semibold text-brand-700">
+        <Link href="/billetera" className="block text-center text-sm font-semibold text-gold-300">
           → Recargar saldo
         </Link>
       )}

@@ -83,7 +83,7 @@ export default async function AdminPage() {
             <Stat label="Pozos en juego" value={formatGTQ(f.pots)} />
             <Stat label="Ganancia (comisión)" value={formatGTQ(f.revenue)} highlight />
           </div>
-          <div className={"mt-4 rounded-xl px-4 py-3 text-sm font-semibold " + (f.diff === 0 ? "bg-brand-50 text-brand-700" : "bg-red-50 text-red-700")}>
+          <div className={"mt-4 rounded-xl px-4 py-3 text-sm font-semibold " + (f.diff === 0 ? "bg-brand-500/15 text-brand-300" : "bg-red-500/15 text-red-300")}>
             Cuadre contable (Activos = Pasivos + Patrimonio): diferencia {formatGTQ(f.diff)} {f.diff === 0 ? "✓ cuadra" : "✗ REVISAR"}
           </div>
         </section>
@@ -92,16 +92,16 @@ export default async function AdminPage() {
         <section>
           <h2 className="mb-4 text-xl font-bold">Pagos pendientes de confirmar ({pendingPayments.length})</h2>
           {pendingPayments.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay pagos pendientes.</p>
+            <p className="text-sm text-gray-400">No hay pagos pendientes.</p>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-gray-200">
+            <div className="overflow-hidden rounded-2xl border border-white/10">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-left text-gray-500">
+                <thead className="bg-white/5 text-left text-gray-400">
                   <tr><th className="px-4 py-2">Jugador</th><th className="px-4 py-2">Monto</th><th className="px-4 py-2">Método</th><th className="px-4 py-2">Ref.</th><th className="px-4 py-2"></th></tr>
                 </thead>
                 <tbody>
                   {pendingPayments.map((p) => (
-                    <tr key={p.id} className="border-t border-gray-100">
+                    <tr key={p.id} className="border-t border-white/10">
                       <td className="px-4 py-2">{p.user.name}</td>
                       <td className="px-4 py-2 font-semibold">{formatGTQ(p.amountCents)}</td>
                       <td className="px-4 py-2">{p.method}</td>
@@ -118,7 +118,7 @@ export default async function AdminPage() {
         {/* Cargar resultados */}
         <section>
           <h2 className="mb-4 text-xl font-bold">Cargar resultados (próximos partidos)</h2>
-          <div className="space-y-2 rounded-2xl border border-gray-200 p-4">
+          <div className="space-y-2 rounded-2xl border border-white/10 p-4">
             {matches.map((m) => (
               <SetResultForm key={m.id} matchId={m.id} homeTeam={m.homeTeam} awayTeam={m.awayTeam} />
             ))}
@@ -128,19 +128,19 @@ export default async function AdminPage() {
         {/* Liquidar quinielas */}
         <section>
           <h2 className="mb-4 text-xl font-bold">Quinielas</h2>
-          <div className="overflow-hidden rounded-2xl border border-gray-200">
+          <div className="overflow-hidden rounded-2xl border border-white/10">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-gray-500">
+              <thead className="bg-white/5 text-left text-gray-400">
                 <tr><th className="px-4 py-2">Nombre</th><th className="px-4 py-2">Tipo</th><th className="px-4 py-2">Estado</th><th className="px-4 py-2">Pozo</th><th className="px-4 py-2"></th></tr>
               </thead>
               <tbody>
                 {poolsWithPot.map((p) => (
-                  <tr key={p.id} className="border-t border-gray-100">
+                  <tr key={p.id} className="border-t border-white/10">
                     <td className="px-4 py-2 font-semibold">{p.name}</td>
                     <td className="px-4 py-2">{p.type}</td>
                     <td className="px-4 py-2">{p.status}</td>
                     <td className="px-4 py-2 font-semibold">{formatGTQ(p.pot)}</td>
-                    <td className="px-4 py-2">{p.status !== "SETTLED" && <SettleButton poolId={p.id} />}</td>
+                    <td className="px-4 py-2">{(p.status === "OPEN" || p.status === "CLOSED") && <SettleButton poolId={p.id} />}</td>
                   </tr>
                 ))}
               </tbody>
@@ -151,14 +151,14 @@ export default async function AdminPage() {
         {/* Auditoría */}
         <section>
           <h2 className="mb-4 text-xl font-bold">Auditoría reciente</h2>
-          <div className="overflow-hidden rounded-2xl border border-gray-200">
+          <div className="overflow-hidden rounded-2xl border border-white/10">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-gray-500">
+              <thead className="bg-white/5 text-left text-gray-400">
                 <tr><th className="px-4 py-2">Acción</th><th className="px-4 py-2">Entidad</th><th className="px-4 py-2">Fecha</th></tr>
               </thead>
               <tbody>
                 {audit.map((a) => (
-                  <tr key={a.id} className="border-t border-gray-100">
+                  <tr key={a.id} className="border-t border-white/10">
                     <td className="px-4 py-2 font-medium">{a.action}</td>
                     <td className="px-4 py-2 text-gray-500">{a.entity}</td>
                     <td className="px-4 py-2 text-gray-500">{a.createdAt.toLocaleString("es-GT")}</td>
@@ -175,9 +175,9 @@ export default async function AdminPage() {
 
 function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
-    <div className={"card " + (highlight ? "bg-brand-600 text-white" : "")}>
-      <div className={"text-sm " + (highlight ? "text-brand-50" : "text-gray-500")}>{label}</div>
-      <div className="mt-1 text-2xl font-extrabold">{value}</div>
+    <div className={"card " + (highlight ? "border-gold-600/40 bg-gold-400/10" : "")}>
+      <div className={"text-xs font-bold uppercase tracking-wide " + (highlight ? "text-gold-500" : "text-gray-400")}>{label}</div>
+      <div className={"scoreboard-digits mt-1 text-2xl font-black " + (highlight ? "text-gold-300" : "")}>{value}</div>
     </div>
   );
 }

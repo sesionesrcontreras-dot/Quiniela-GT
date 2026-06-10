@@ -56,9 +56,9 @@ export default function PredictionForm({ entryId, matches }: { entryId: string; 
       {rows.map((m) => (
         <div
           key={m.id}
-          className={"rounded-xl border p-3 " + (m.locked ? "border-gray-200 bg-gray-50" : "border-gray-200 bg-white")}
+          className={"rounded-xl border border-white/10 p-3 " + (m.locked ? "bg-white/5 opacity-80" : "bg-night-800")}
         >
-          <div className="mb-2 flex items-center justify-between text-xs text-gray-500">
+          <div className="mb-2 flex items-center justify-between text-xs text-gray-400">
             <span>{m.stage}</span>
             <span>{m.kickoffLabel}</span>
           </div>
@@ -71,9 +71,9 @@ export default function PredictionForm({ entryId, matches }: { entryId: string; 
               disabled={m.locked}
               value={m.predHome}
               onChange={(e) => setVal(m.id, "predHome", e.target.value)}
-              className="w-14 rounded-lg border border-gray-300 px-2 py-1 text-center disabled:bg-gray-100"
+              className="w-14 rounded-lg border border-white/15 bg-night-950 px-2 py-1 text-center text-cream disabled:opacity-50"
             />
-            <span className="text-gray-400">-</span>
+            <span className="text-gray-500">-</span>
             <input
               type="number"
               min={0}
@@ -81,27 +81,27 @@ export default function PredictionForm({ entryId, matches }: { entryId: string; 
               disabled={m.locked}
               value={m.predAway}
               onChange={(e) => setVal(m.id, "predAway", e.target.value)}
-              className="w-14 rounded-lg border border-gray-300 px-2 py-1 text-center disabled:bg-gray-100"
+              className="w-14 rounded-lg border border-white/15 bg-night-950 px-2 py-1 text-center text-cream disabled:opacity-50"
             />
             <span className="flex-1 font-semibold">{m.awayTeam}</span>
           </div>
           {m.locked && (
             <div className="mt-2 text-center text-xs">
               {m.result ? (
-                <span className="font-semibold text-ink">
+                <span className="font-semibold text-gold-300">
                   Resultado: {m.result}
                   {m.pointsAwarded != null && ` · +${m.pointsAwarded} pts`}
                 </span>
               ) : (
-                <span className="text-gray-400">Cerrado (ya inició)</span>
+                <span className="text-gray-500">Cerrado (ya inició)</span>
               )}
             </div>
           )}
         </div>
       ))}
 
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {msg && <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{msg}</p>}
+      {error && <p className="pill-error">{error}</p>}
+      {msg && <p className="pill-ok">{msg}</p>}
       <button disabled={loading} onClick={save} className="btn-primary w-full disabled:opacity-60">
         {loading ? "Guardando..." : "Guardar predicciones"}
       </button>

@@ -41,9 +41,9 @@ export default function ChampionPick({
 
   if (locked) {
     return (
-      <div className="card">
-        <h3 className="font-bold">🏆 Tu campeón del Mundial</h3>
-        <p className="mt-2 text-sm text-gray-600">
+      <div className="card border-gold-600/40">
+        <h3 className="font-bold text-gold-300">🏆 Tu campeón del Mundial</h3>
+        <p className="mt-2 text-sm text-gray-300">
           {current
             ? `Elegiste a ${current}. Si sale campeón, ganas +${bonusPoints} puntos.`
             : "El torneo ya arrancó: la elección de campeón está cerrada."}
@@ -53,16 +53,16 @@ export default function ChampionPick({
   }
 
   return (
-    <div className="card">
-      <h3 className="font-bold">🏆 ¿Quién será el campeón?</h3>
-      <p className="mt-1 text-sm text-gray-600">
+    <div className="card border-gold-600/40">
+      <h3 className="font-bold text-gold-300">🏆 ¿Quién será el campeón?</h3>
+      <p className="mt-1 text-sm text-gray-300">
         Predicción general del boleto: si tu equipo levanta la copa, sumas{" "}
-        <span className="font-bold text-brand-700">+{bonusPoints} puntos</span>.
+        <span className="font-bold text-gold-300">+{bonusPoints} puntos</span>.
         Puedes cambiarla hasta que arranque el Mundial.
       </p>
       <div className="mt-3 flex gap-2">
         <select
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          className="field text-sm"
           value={team}
           onChange={(e) => setTeam(e.target.value)}
         >
@@ -71,12 +71,12 @@ export default function ChampionPick({
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
-        <button onClick={save} disabled={loading} className="btn-primary text-sm disabled:opacity-60">
+        <button onClick={save} disabled={loading} className="btn-gold text-sm disabled:opacity-60">
           {loading ? "..." : "Guardar"}
         </button>
       </div>
-      {error && <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {msg && <p className="mt-2 rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{msg}</p>}
+      {error && <p className="pill-error mt-2">{error}</p>}
+      {msg && <p className="pill-ok mt-2">{msg}</p>}
     </div>
   );
 }

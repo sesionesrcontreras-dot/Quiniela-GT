@@ -104,20 +104,20 @@ export default function RechargeForm() {
     <form onSubmit={submit} className="card space-y-4">
       <h3 className="font-bold">Recargar saldo</h3>
       <div>
-        <label className="text-sm font-semibold">Monto (Q)</label>
+        <label className="label">Monto (Q)</label>
         <input
           type="number"
           min={1}
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          className="field mt-1"
           value={amount}
           onChange={(e) => setAmount(Number(e.target.value))}
           required
         />
       </div>
       <div>
-        <label className="text-sm font-semibold">Método de pago</label>
+        <label className="label">Método de pago</label>
         <select
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+          className="field mt-1"
           value={method}
           onChange={(e) => setMethod(e.target.value)}
         >
@@ -128,17 +128,17 @@ export default function RechargeForm() {
       </div>
       {method !== "CARD_PAGGO" && (
         <div>
-          <label className="text-sm font-semibold">Referencia / No. de boleta (opcional)</label>
+          <label className="label">Referencia / No. de boleta (opcional)</label>
           <input
-            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            className="field mt-1"
             value={reference}
             onChange={(e) => setReference(e.target.value)}
             placeholder="Ej. No. de transferencia"
           />
         </div>
       )}
-      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-      {msg && <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{msg}</p>}
+      {error && <p className="pill-error">{error}</p>}
+      {msg && <p className="pill-ok">{msg}</p>}
 
       {pendingCard ? (
         <div className="space-y-2">

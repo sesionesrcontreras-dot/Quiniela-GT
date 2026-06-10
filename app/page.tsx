@@ -2,12 +2,13 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatGTQ } from "@/lib/money";
 import { getPoolPots } from "@/lib/ledger";
+import { getViewer } from "@/lib/viewer";
 import Countdown from "@/components/Countdown";
 import PotTicker from "@/components/PotTicker";
 
-// ISR: la landing se sirve desde cache (carga casi instantanea para el
-// trafico de las pautas) y se regenera como maximo cada 60 segundos.
-export const revalidate = 60;
+// Dinamica: el encabezado refleja si el visitante ya inicio sesion (asi el
+// logo no "parece" desloguear). Las consultas son ligeras (~150ms).
+export const dynamic = "force-dynamic";
 
 const fmt = new Intl.DateTimeFormat("es-GT", {
   timeZone: "America/Guatemala",
@@ -41,16 +42,17 @@ export default async function Home() {
   const pots = await getPoolPots(prisma, openPools.map((p) => p.id));
   const pozoTotal = [...pots.values()].reduce((a, b) => a + b, 0);
   const firstKickoff = upcoming[0]?.kickoff ?? null;
+  const viewer = await getViewer();
 
   return (
     <main className="bg-night-950 text-cream">
       {/* ───────────── Nav ───────────── */}
       <header className="sticky top-0 z-20 border-b border-white/10 bg-night-950/90 backdrop-blur">
         <div className="container-app flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2 text-lg font-black">
+          <Link href={viewer ? "/inicio" : "/"} className="flex items-center gap-2 text-lg font-black">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">⚽</span>
             Quiniela<span className="text-brand-400">GT</span>
-          </div>
+          </Link>
           <nav className="hidden gap-6 text-sm font-medium text-gray-300 sm:flex">
             <a href="#pozo" className="hover:text-gold-300">El pozo</a>
             <a href="#niveles" className="hover:text-gold-300">Niveles</a>
@@ -59,8 +61,19 @@ export default async function Home() {
             <a href="#seguridad" className="hover:text-gold-300">Seguridad</a>
           </nav>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="hidden text-sm font-semibold text-gray-200 hover:text-white sm:block">Ingresar</Link>
-            <Link href="/registro" className="btn-gold whitespace-nowrap px-4 py-2 text-sm">Crear cuenta</Link>
+            {viewer ? (
+              <>
+                <Link href="/billetera" className="scoreboard-digits rounded-full bg-gold-400/15 px-3 py-1 text-sm font-bold text-gold-300">
+                  {formatGTQ(viewer.balanceCents)}
+                </Link>
+                <Link href="/inicio" className="btn-gold whitespace-nowrap px-4 py-2 text-sm">Mi cuenta</Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="hidden text-sm font-semibold text-gray-200 hover:text-white sm:block">Ingresar</Link>
+                <Link href="/registro" className="btn-gold whitespace-nowrap px-4 py-2 text-sm">Crear cuenta</Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -95,7 +108,7 @@ export default async function Home() {
             <div className="rounded-2xl border border-gold-600/40 bg-night-900 p-6 sm:p-8">
               <div className="flex items-baseline justify-between">
                 <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold-500">Pozo acumulado</span>
-                <span className="text-xs text-gray-400">{boletos} boletos en juego</span>
+                <span className="text-xs text-gray-400">{boletos} {boletos === 1 ? "boleto" : "boletos"} en juego</span>
               </div>
               <div className="mt-2 text-5xl font-black text-gold-300 sm:text-6xl">
                 <PotTicker cents={pozoTotal} />
@@ -133,7 +146,7 @@ export default async function Home() {
             <p className="mt-3 text-gray-400">
               Seis quinielas, el mismo juego: predices el marcador de los 27
               partidos y a tu campeón del Mundial. A mayor entrada, mayor pozo.
-              Hasta 3 boletos por quiniela.
+              Un boleto por persona en cada quiniela.
             </p>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
