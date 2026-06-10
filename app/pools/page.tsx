@@ -1,15 +1,10 @@
 import Nav from "@/components/Nav";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getBalance } from "@/lib/ledger";
+import { getPoolPots } from "@/lib/ledger";
 import { formatGTQ } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
-
-async function poolPot(poolId: string): Promise<number> {
-  const escrow = await prisma.ledgerAccount.findUnique({ where: { poolId } });
-  return escrow ? -(await getBalance(prisma, escrow.id)) : 0;
-}
 
 const typeLabel: Record<string, string> = {
   PUBLIC: "Pública",
@@ -24,9 +19,8 @@ export default async function PoolsPage() {
     include: { _count: { select: { entries: true } }, tournament: true },
   });
 
-  const withPot = await Promise.all(
-    pools.map(async (p) => ({ ...p, pot: await poolPot(p.id) }))
-  );
+  const pots = await getPoolPots(prisma, pools.map((p) => p.id));
+  const withPot = pools.map((p) => ({ ...p, pot: pots.get(p.id) ?? 0 }));
 
   return (
     <>

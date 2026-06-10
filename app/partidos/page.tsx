@@ -1,7 +1,7 @@
 import Nav from "@/components/Nav";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { getBalance } from "@/lib/ledger";
+import { getPoolPots } from "@/lib/ledger";
 import { formatGTQ } from "@/lib/money";
 
 export const dynamic = "force-dynamic";
@@ -15,11 +15,6 @@ const fmt = new Intl.DateTimeFormat("es-GT", {
   minute: "2-digit",
 });
 
-async function poolPot(poolId: string): Promise<number> {
-  const escrow = await prisma.ledgerAccount.findUnique({ where: { poolId } });
-  return escrow ? -(await getBalance(prisma, escrow.id)) : 0;
-}
-
 export default async function PartidosPage() {
   const pools = await prisma.pool.findMany({
     where: {
@@ -31,9 +26,8 @@ export default async function PartidosPage() {
     include: { match: true, _count: { select: { entries: true } } },
   });
 
-  const withPot = await Promise.all(
-    pools.map(async (p) => ({ ...p, pot: await poolPot(p.id) }))
-  );
+  const pots = await getPoolPots(prisma, pools.map((p) => p.id));
+  const withPot = pools.map((p) => ({ ...p, pot: pots.get(p.id) ?? 0 }));
 
   return (
     <>

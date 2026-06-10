@@ -41,6 +41,15 @@ export default async function Nav() {
           )}
         </div>
       </div>
+
+      {/* Fila de navegacion solo para moviles (en sm+ se usa la de arriba) */}
+      <nav className="container-app flex gap-5 overflow-x-auto pb-3 text-sm font-semibold text-gray-600 sm:hidden">
+        <Link href="/pools" className="whitespace-nowrap hover:text-ink">Quinielas</Link>
+        <Link href="/partidos" className="whitespace-nowrap hover:text-ink">Retos por partido</Link>
+        {viewer && <Link href="/inicio" className="whitespace-nowrap hover:text-ink">Inicio</Link>}
+        {viewer && <Link href="/billetera" className="whitespace-nowrap hover:text-ink">Billetera</Link>}
+        {isAdmin && <Link href="/admin" className="whitespace-nowrap font-bold text-brand-700">Admin</Link>}
+      </nav>
     </header>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const METHODS = [
@@ -20,6 +20,39 @@ export default function RechargeForm() {
   // Pago con tarjeta pendiente de verificar contra Paggo
   const [pendingCard, setPendingCard] = useState<{ paymentId: string; payUrl: string } | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Mientras hay un pago con tarjeta pendiente, verificamos solos cada 6s
+  // (hasta 10 min): el cliente paga en Paggo y al volver ya tiene su saldo.
+  useEffect(() => {
+    if (!pendingCard) return;
+    const startedAt = Date.now();
+    pollRef.current = setInterval(async () => {
+      if (Date.now() - startedAt > 10 * 60_000) {
+        if (pollRef.current) clearInterval(pollRef.current);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/payments/${pendingCard.paymentId}/verify`, { method: "POST" });
+        const data = await res.json();
+        if (data.ok && data.data.status === "CONFIRMED") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setPendingCard(null);
+          setMsg("✅ Pago confirmado. Tu saldo ya fue acreditado.");
+          router.refresh();
+        } else if (data.ok && data.data.status === "REJECTED") {
+          if (pollRef.current) clearInterval(pollRef.current);
+          setPendingCard(null);
+          setError("El link de pago fue cancelado. Crea una nueva recarga.");
+        }
+      } catch {
+        // red intermitente: el siguiente intento lo cubre
+      }
+    }, 6000);
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [pendingCard, router]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -115,7 +148,7 @@ export default function RechargeForm() {
             disabled={verifying}
             className="btn-primary w-full disabled:opacity-60"
           >
-            {verifying ? "Verificando con Paggo..." : "Ya pagué — verificar y acreditar"}
+            {verifying ? "Verificando con Paggo..." : "Ya pagué — verificar ahora"}
           </button>
           <a
             href={pendingCard.payUrl}

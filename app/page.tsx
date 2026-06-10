@@ -3,7 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { formatGTQ } from "@/lib/money";
 import Countdown from "@/components/Countdown";
 
-export const dynamic = "force-dynamic";
+// ISR: la landing se sirve desde cache (carga casi instantanea para el
+// trafico de las pautas) y se regenera como maximo cada 60 segundos.
+export const revalidate = 60;
 
 const fmt = new Intl.DateTimeFormat("es-GT", {
   timeZone: "America/Guatemala",
@@ -16,15 +18,20 @@ const fmt = new Intl.DateTimeFormat("es-GT", {
 
 export default async function Home() {
   // Datos REALES para que la pagina se sienta viva (nada inventado).
+  // Una sola ida a la DB: partidos proximos con su reto incluido.
   const upcoming = await prisma.match.findMany({
     where: { status: "SCHEDULED", kickoff: { gt: new Date() } },
     orderBy: { kickoff: "asc" },
     take: 4,
+    include: {
+      pools: {
+        where: { status: "OPEN" },
+        select: { id: true, matchId: true, entryFeeCents: true },
+        take: 1,
+      },
+    },
   });
-  const retos = await prisma.pool.findMany({
-    where: { matchId: { in: upcoming.map((m) => m.id) }, status: "OPEN" },
-    select: { id: true, matchId: true, entryFeeCents: true },
-  });
+  const retos = upcoming.flatMap((m) => m.pools);
   const retoByMatch = new Map(retos.map((r) => [r.matchId!, r]));
   const firstKickoff = upcoming[0]?.kickoff ?? null;
 

@@ -87,6 +87,36 @@ export async function postTransaction(
   });
 }
 
+/**
+ * Pozos de VARIAS quinielas en 2 consultas (en vez de 2 por quiniela).
+ * Devuelve Map poolId -> centavos disponibles en su escrow.
+ */
+export async function getPoolPots(db: Tx, poolIds: string[]): Promise<Map<string, number>> {
+  const pots = new Map<string, number>();
+  if (poolIds.length === 0) return pots;
+
+  const accounts = await db.ledgerAccount.findMany({
+    where: { poolId: { in: poolIds } },
+    select: { id: true, poolId: true },
+  });
+  if (accounts.length === 0) return pots;
+
+  const sums = await db.ledgerEntry.groupBy({
+    by: ["accountId"],
+    where: { accountId: { in: accounts.map((a) => a.id) } },
+    _sum: { debitCents: true, creditCents: true },
+  });
+  const byAccount = new Map(sums.map((s) => [s.accountId, s]));
+
+  for (const a of accounts) {
+    const s = byAccount.get(a.id);
+    // escrow es pasivo: disponible = haber - debe
+    const pot = s ? (s._sum.creditCents ?? 0) - (s._sum.debitCents ?? 0) : 0;
+    pots.set(a.poolId!, pot);
+  }
+  return pots;
+}
+
 /** Saldo de una cuenta = SUM(debe) - SUM(haber), en centavos. */
 export async function getBalance(db: Tx, accountId: string): Promise<number> {
   const agg = await db.ledgerEntry.aggregate({

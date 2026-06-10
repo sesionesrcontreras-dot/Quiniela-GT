@@ -72,7 +72,7 @@ export async function POST(req: Request) {
       CASH_AGENCY:
         "Paga en agencia con el codigo de tu solicitud. Acreditamos al confirmar el banco.",
       CARD_PAGGO: payUrl
-        ? "Paga con tarjeta en la ventana de Paggo y luego presiona “Ya pagué”."
+        ? "Paga con tarjeta en la ventana de Paggo. Al completar el pago, tu saldo se acredita automaticamente."
         : "Seras redirigido a Paggo para completar el pago con tarjeta.",
     };
 
