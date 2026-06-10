@@ -19,6 +19,8 @@ const TIERS: [number, string][] = [
   [10000, "Quiniela Mundial 2026 — Entrada Q100"],
   [15000, "Quiniela Mundial 2026 — Entrada Q150"],
   [20000, "Quiniela Mundial 2026 — Entrada Q200"],
+  [35000, "Quiniela Mundial 2026 — Entrada Q350"],
+  [50000, "Quiniela Mundial 2026 — Entrada Q500"],
 ];
 
 async function main() {

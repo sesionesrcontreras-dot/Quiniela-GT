@@ -120,19 +120,21 @@ export default async function Home() {
         <div className="container-app py-20">
           <h2 className="text-center text-3xl font-bold">Elige tu nivel de entrada</h2>
           <p className="mx-auto mt-3 max-w-2xl text-center text-gray-600">
-            Cuatro quinielas públicas con el mismo calendario del Mundial.
+            Seis quinielas públicas con el mismo calendario del Mundial.
             A mayor entrada, mayor pozo. Puedes jugar hasta 3 boletos por quiniela.
           </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[
               ["Q50", "Para empezar", false],
               ["Q100", "La más jugada", true],
               ["Q150", "Pozo grande", false],
-              ["Q200", "Máximo premio", false],
+              ["Q200", "Pozo mayor", false],
+              ["Q350", "Liga fuerte", false],
+              ["Q500", "Mesa VIP", false],
             ].map(([precio, tag, destacada], i) => (
               <div
                 key={precio as string}
-                className={`card animate-fade-up anim-delay-${i + 1} flex flex-col items-center text-center ${
+                className={`card animate-fade-up anim-delay-${(i % 4) + 1} flex flex-col items-center text-center ${
                   destacada ? "border-2 border-brand-600" : ""
                 }`}
               >
@@ -236,6 +238,7 @@ export default async function Home() {
       <footer className="border-t border-gray-100">
         <div className="container-app flex flex-col items-center justify-between gap-4 py-8 text-sm text-gray-500 sm:flex-row">
           <span>© {new Date().getFullYear()} QuinielaGT. Juega con responsabilidad. +18.</span>
+          <Link href="/terminos" className="font-semibold hover:text-ink">Términos y Condiciones</Link>
           <span>Hecho en Guatemala 🇬🇹</span>
         </div>
       </footer>

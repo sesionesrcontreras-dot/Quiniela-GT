@@ -82,7 +82,7 @@ async function main() {
 
   // Quinielas de PAGA (el motor de ingresos): 4 niveles de entrada
   // Rake 17% = 5% del procesador de pagos + 12% de margen neto minimo.
-  for (const feeCents of [5000, 10000, 15000, 20000]) {
+  for (const feeCents of [5000, 10000, 15000, 20000, 35000, 50000]) {
     await prisma.pool.create({
       data: {
         name: `Quiniela Mundial 2026 — Entrada Q${feeCents / 100}`,
@@ -104,7 +104,7 @@ async function main() {
   console.log("  Admin:    admin@quiniela.gt / Password123");
   console.log("  Jugador:  ana@demo.gt       / Password123");
   console.log("  Jugador:  luis@demo.gt      / Password123");
-  console.log("  Quinielas: Q50 | Q100 | Q150 | Q200 (corre db:retos para los retos por partido)");
+  console.log("  Quinielas: Q50–Q500 (corre db:retos para los retos por partido)");
 }
 
 main()

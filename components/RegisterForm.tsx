@@ -58,6 +58,16 @@ export default function RegisterForm() {
         />
         <p className="mt-1 text-xs text-gray-500">Mínimo 8 caracteres, con letras y números.</p>
       </div>
+      <label className="flex items-start gap-2 text-sm text-gray-600">
+        <input type="checkbox" required className="mt-1 h-4 w-4 accent-brand-600" />
+        <span>
+          Soy mayor de 18 años y acepto los{" "}
+          <Link href="/terminos" target="_blank" className="font-semibold text-brand-700 underline">
+            Términos y Condiciones
+          </Link>{" "}
+          del servicio.
+        </span>
+      </label>
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
         {loading ? "Creando..." : "Crear cuenta"}
