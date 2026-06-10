@@ -17,6 +17,9 @@ export default function RechargeForm() {
   const [msg, setMsg] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Pago con tarjeta pendiente de verificar contra Paggo
+  const [pendingCard, setPendingCard] = useState<{ paymentId: string; payUrl: string } | null>(null);
+  const [verifying, setVerifying] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,9 +34,37 @@ export default function RechargeForm() {
     const data = await res.json();
     setLoading(false);
     if (!data.ok) return setError(data.error || "No se pudo crear la solicitud");
-    setMsg(data.data.instructions + " (Tu saldo se acreditará cuando el admin confirme el pago.)");
+
+    if (data.data.payUrl) {
+      // Tarjeta via Paggo: abrir el link de pago y esperar verificacion.
+      setPendingCard({ paymentId: data.data.paymentId, payUrl: data.data.payUrl });
+      window.open(data.data.payUrl, "_blank", "noopener");
+      setMsg(data.data.instructions);
+    } else {
+      setMsg(data.data.instructions + " (Tu saldo se acreditará cuando el admin confirme el pago.)");
+    }
     setReference("");
     router.refresh();
+  }
+
+  async function verifyCard() {
+    if (!pendingCard) return;
+    setError("");
+    setVerifying(true);
+    const res = await fetch(`/api/payments/${pendingCard.paymentId}/verify`, { method: "POST" });
+    const data = await res.json();
+    setVerifying(false);
+    if (!data.ok) return setError(data.error || "No se pudo verificar");
+    if (data.data.status === "CONFIRMED") {
+      setPendingCard(null);
+      setMsg("✅ Pago confirmado. Tu saldo ya fue acreditado.");
+      router.refresh();
+    } else if (data.data.status === "REJECTED") {
+      setPendingCard(null);
+      setError("El link de pago fue cancelado. Crea una nueva recarga.");
+    } else {
+      setMsg("Paggo aún no reporta tu pago. Si ya pagaste, espera unos segundos y vuelve a verificar.");
+    }
   }
 
   return (
@@ -62,20 +93,44 @@ export default function RechargeForm() {
           ))}
         </select>
       </div>
-      <div>
-        <label className="text-sm font-semibold">Referencia / No. de boleta (opcional)</label>
-        <input
-          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-          value={reference}
-          onChange={(e) => setReference(e.target.value)}
-          placeholder="Ej. No. de transferencia"
-        />
-      </div>
+      {method !== "CARD_PAGGO" && (
+        <div>
+          <label className="text-sm font-semibold">Referencia / No. de boleta (opcional)</label>
+          <input
+            className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            placeholder="Ej. No. de transferencia"
+          />
+        </div>
+      )}
       {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
       {msg && <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-700">{msg}</p>}
-      <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
-        {loading ? "Enviando..." : "Solicitar recarga"}
-      </button>
+
+      {pendingCard ? (
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={verifyCard}
+            disabled={verifying}
+            className="btn-primary w-full disabled:opacity-60"
+          >
+            {verifying ? "Verificando con Paggo..." : "Ya pagué — verificar y acreditar"}
+          </button>
+          <a
+            href={pendingCard.payUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-ghost w-full"
+          >
+            Reabrir página de pago
+          </a>
+        </div>
+      ) : (
+        <button disabled={loading} className="btn-primary w-full disabled:opacity-60">
+          {loading ? "Enviando..." : "Solicitar recarga"}
+        </button>
+      )}
     </form>
   );
 }
