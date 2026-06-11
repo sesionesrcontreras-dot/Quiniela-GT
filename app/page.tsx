@@ -49,7 +49,7 @@ export default async function Home() {
       {/* ───────────── Nav ───────────── */}
       <header className="sticky top-0 z-20 border-b border-white/10 bg-night-950/90 backdrop-blur">
         <div className="container-app flex h-16 items-center justify-between">
-          <Link href={viewer ? "/inicio" : "/"} className="flex items-center gap-2 text-lg font-black">
+          <Link href="/" className="flex items-center gap-2 text-lg font-black">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-brand-600 text-white">⚽</span>
             Quiniela<span className="text-brand-400">GT</span>
           </Link>
