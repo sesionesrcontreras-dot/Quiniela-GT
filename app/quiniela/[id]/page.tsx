@@ -119,6 +119,7 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
             ) : boletos.length > 0 ? (
               <MyBoletos
                 boletos={boletos}
+                baseMatches={buildRows(new Map())}
                 teams={teams}
                 championEditable={championEditable}
                 bonusPoints={rules.champion ?? 10}

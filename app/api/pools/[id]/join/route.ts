@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/auth";
-import { chargeEntryFee } from "@/lib/ledger";
+import { chargeEntryFee, getUserWallet, getBalance } from "@/lib/ledger";
 import { ok, fail, handleError, audit, getIp } from "@/lib/security";
 
 // POST /api/pools/:id/join  -> inscribir un boleto en la quiniela
@@ -28,6 +28,16 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     });
     if (myEntries >= pool.maxEntriesPerUser) {
       return fail("Alcanzaste el maximo de boletos para esta quiniela", 409);
+    }
+
+    // Chequeo amistoso de saldo ANTES de cobrar (evita un 500 genérico y
+    // permite mostrar "saldo insuficiente" con enlace a recargar).
+    if (pool.entryFeeCents > 0) {
+      const wallet = await getUserWallet(prisma, session.uid);
+      const available = -(await getBalance(prisma, wallet.id));
+      if (available < pool.entryFeeCents) {
+        return fail("Saldo insuficiente. Recarga en tu billetera para comprar este boleto.", 409);
+      }
     }
 
     // Crea el boleto y, si tiene costo, cobra de la billetera (atomico).

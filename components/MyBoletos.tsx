@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ChampionPick from "./ChampionPick";
 import PredictionForm, { MatchRow } from "./PredictionForm";
@@ -16,9 +16,13 @@ export interface BoletoData {
  * Panel de los boletos del jugador en una quiniela. Permite tener VARIOS
  * boletos (cada uno con su propio campeón y predicciones), cambiar entre
  * ellos por pestañas y comprar otro boleto sin salir de la página.
+ *
+ * La lista vive en estado local para que un boleto recién comprado aparezca
+ * AL INSTANTE (no dependemos de que el servidor refresque a tiempo).
  */
 export default function MyBoletos({
-  boletos,
+  boletos: initialBoletos,
+  baseMatches,
   teams,
   championEditable,
   bonusPoints,
@@ -28,6 +32,7 @@ export default function MyBoletos({
   maxEntries,
 }: {
   boletos: BoletoData[];
+  baseMatches: MatchRow[];
   teams: string[];
   championEditable: boolean;
   bonusPoints: number;
@@ -37,38 +42,57 @@ export default function MyBoletos({
   maxEntries: number;
 }) {
   const router = useRouter();
-  const [activeId, setActiveId] = useState(boletos[0]?.id ?? "");
+  const [boletos, setBoletos] = useState(initialBoletos);
+  const [activeId, setActiveId] = useState(initialBoletos[0]?.id ?? "");
   const [buying, setBuying] = useState(false);
   const [error, setError] = useState("");
 
-  // Si el boleto activo ya no existe (tras refrescar), usa el primero.
+  // Incorpora cualquier boleto que el servidor traiga y que no tengamos local
+  // (por si se refrescó la página o se compró desde otro lado).
+  useEffect(() => {
+    setBoletos((prev) => {
+      const ids = new Set(prev.map((b) => b.id));
+      const nuevos = initialBoletos.filter((b) => !ids.has(b.id));
+      return nuevos.length ? [...prev, ...nuevos] : prev;
+    });
+  }, [initialBoletos]);
+
   const active = boletos.find((b) => b.id === activeId) ?? boletos[0];
 
   async function buyAnother() {
     setError("");
     setBuying(true);
-    const res = await fetch(`/api/pools/${poolId}/join`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{}",
-    });
-    const data = await res.json();
-    setBuying(false);
-    if (!data.ok) {
-      if ((data.error || "").toLowerCase().includes("saldo")) {
-        setError("Saldo insuficiente. Recarga en tu billetera para comprar otro boleto.");
-      } else {
-        setError(data.error || "No se pudo comprar otro boleto");
+    try {
+      const res = await fetch(`/api/pools/${poolId}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        if ((data.error || "").toLowerCase().includes("saldo")) {
+          setError("Saldo insuficiente. Recarga en tu billetera para comprar otro boleto.");
+        } else {
+          setError(data.error || "No se pudo comprar otro boleto");
+        }
+        return;
       }
-      return;
+      // Aparece de inmediato como nuevo boleto activo.
+      const nuevo: BoletoData = { id: data.data.entryId, championPick: null, matches: baseMatches };
+      setBoletos((prev) => [...prev, nuevo]);
+      setActiveId(nuevo.id);
+      router.refresh(); // actualiza pozo y tabla en la columna lateral
+    } catch {
+      setError("No se pudo comprar otro boleto. Revisa tu conexión.");
+    } finally {
+      setBuying(false);
     }
-    if (data.data?.entryId) setActiveId(data.data.entryId);
-    router.refresh();
   }
 
   if (!active) return null;
   const canBuyMore = boletos.length < maxEntries;
   const label = isPronostico ? "Pronóstico" : "Boleto";
+  const activeIndex = boletos.findIndex((b) => b.id === active.id);
 
   return (
     <div className="space-y-6">
@@ -115,7 +139,7 @@ export default function MyBoletos({
       {/* Predicciones del boleto activo */}
       <div>
         <h2 className="mb-3 text-lg font-bold">
-          Tus predicciones {boletos.length > 1 ? `· ${label} ${boletos.findIndex((b) => b.id === active.id) + 1}` : ""}
+          Tus predicciones {boletos.length > 1 ? `· ${label} ${activeIndex + 1}` : ""}
         </h2>
         <PredictionForm key={`pred-${active.id}`} entryId={active.id} matches={active.matches} />
       </div>
