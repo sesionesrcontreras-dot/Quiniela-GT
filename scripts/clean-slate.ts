@@ -11,6 +11,21 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  // ══════════════════════════════════════════════════════════════════
+  //  CANDADO DE SEGURIDAD: si ya entró dinero real (algún pago CONFIRMADO),
+  //  este script se NIEGA a borrar para proteger a los clientes que pagaron.
+  //  Solo se puede forzar a propósito con ALLOW_WIPE=yes (no usar en serio).
+  // ══════════════════════════════════════════════════════════════════
+  const dineroReal = await prisma.payment.count({ where: { status: "CONFIRMED" } });
+  if (dineroReal > 0 && process.env.ALLOW_WIPE !== "yes") {
+    console.error(
+      `\n⛔ ABORTADO. Hay ${dineroReal} pago(s) CONFIRMADO(S) (dinero real de clientes).\n` +
+        `   Este script NO borrará cuentas ni saldos de clientes.\n` +
+        `   La base está protegida.\n`
+    );
+    process.exit(1);
+  }
+
   const r1 = await prisma.prediction.deleteMany({});
   const r2 = await prisma.ledgerEntry.deleteMany({});
   const r3 = await prisma.ledgerTransaction.deleteMany({});
