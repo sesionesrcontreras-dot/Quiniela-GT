@@ -7,8 +7,8 @@ import { getBalance } from "@/lib/ledger";
 import { formatGTQ } from "@/lib/money";
 import { parseRules } from "@/lib/scoring";
 import JoinPoolButton from "@/components/JoinPoolButton";
-import PredictionForm, { MatchRow } from "@/components/PredictionForm";
-import ChampionPick from "@/components/ChampionPick";
+import { MatchRow } from "@/components/PredictionForm";
+import MyBoletos, { BoletoData } from "@/components/MyBoletos";
 
 export const dynamic = "force-dynamic";
 
@@ -41,49 +41,56 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
     include: { user: { select: { name: true } } },
   });
 
-  // Boleto del usuario (si tiene)
-  let myEntry = null as null | { id: string; championPick: string | null };
-  let predMap = new Map<string, { predHome: number; predAway: number; pointsAwarded: number }>();
-  if (viewer) {
-    const entry = await prisma.entry.findFirst({
-      where: { poolId: pool.id, userId: viewer.user.id, status: "ACTIVE" },
-      include: { predictions: true },
-    });
-    if (entry) {
-      myEntry = { id: entry.id, championPick: entry.championPick };
-      predMap = new Map(entry.predictions.map((p) => [p.matchId, p]));
-    }
-  }
-
-  // Equipos del torneo (para elegir campeon) y si la eleccion sigue abierta
-  const teams = pool.matchId
-    ? []
-    : [...new Set(pool.tournament.matches.flatMap((m) => [m.homeTeam, m.awayTeam]))].sort((a, b) =>
-        a.localeCompare(b, "es")
-      );
-  const championLocked = pool.tournament.startsAt <= new Date();
-
   const now = new Date();
   // Reto de un solo partido: solo se muestra y predice ese match.
   const poolMatches = pool.matchId
     ? pool.tournament.matches.filter((m) => m.id === pool.matchId)
     : pool.tournament.matches;
-  const matchRows: MatchRow[] = poolMatches.map((m) => {
-    const locked = m.status !== "SCHEDULED" || (m.lockedAt ?? m.kickoff) <= now;
-    const pred = predMap.get(m.id);
-    return {
-      id: m.id,
-      homeTeam: m.homeTeam,
-      awayTeam: m.awayTeam,
-      kickoffLabel: fmt.format(m.kickoff),
-      stage: m.stage,
-      locked,
-      result: m.status === "FINISHED" && m.homeScore != null ? `${m.homeScore} - ${m.awayScore}` : null,
-      predHome: pred ? pred.predHome : "",
-      predAway: pred ? pred.predAway : "",
-      pointsAwarded: pred?.pointsAwarded,
-    };
-  });
+
+  function buildRows(
+    predMap: Map<string, { predHome: number; predAway: number; pointsAwarded: number }>
+  ): MatchRow[] {
+    return poolMatches.map((m) => {
+      const locked = m.status !== "SCHEDULED" || (m.lockedAt ?? m.kickoff) <= now;
+      const pred = predMap.get(m.id);
+      return {
+        id: m.id,
+        homeTeam: m.homeTeam,
+        awayTeam: m.awayTeam,
+        kickoffLabel: fmt.format(m.kickoff),
+        stage: m.stage,
+        locked,
+        result: m.status === "FINISHED" && m.homeScore != null ? `${m.homeScore} - ${m.awayScore}` : null,
+        predHome: pred ? pred.predHome : "",
+        predAway: pred ? pred.predAway : "",
+        pointsAwarded: pred?.pointsAwarded,
+      };
+    });
+  }
+
+  // Boletos del usuario (puede tener varios, cada uno con su campeón).
+  let boletos: BoletoData[] = [];
+  if (viewer) {
+    const entries = await prisma.entry.findMany({
+      where: { poolId: pool.id, userId: viewer.user.id, status: "ACTIVE" },
+      include: { predictions: true },
+      orderBy: { createdAt: "asc" },
+    });
+    boletos = entries.map((e) => ({
+      id: e.id,
+      championPick: e.championPick,
+      matches: buildRows(new Map(e.predictions.map((p) => [p.matchId, p]))),
+    }));
+  }
+
+  // Equipos del torneo (para elegir campeón). El campeón se puede elegir o
+  // cambiar mientras la quiniela siga ABIERTA (no se cierra al arrancar).
+  const teams = pool.matchId
+    ? []
+    : [...new Set(pool.tournament.matches.flatMap((m) => [m.homeTeam, m.awayTeam]))].sort((a, b) =>
+        a.localeCompare(b, "es")
+      );
+  const championEditable = pool.status === "OPEN";
 
   return (
     <>
@@ -109,22 +116,17 @@ export default async function QuinielaPage({ params }: { params: { id: string } 
                   <Link href="/registro" className="btn-primary">Crear cuenta</Link>
                 </div>
               </div>
-            ) : myEntry ? (
-              <div className="space-y-6">
-                {!pool.matchId && (
-                  <ChampionPick
-                    entryId={myEntry.id}
-                    teams={teams}
-                    current={myEntry.championPick}
-                    locked={championLocked}
-                    bonusPoints={rules.champion ?? 10}
-                  />
-                )}
-                <div>
-                  <h2 className="mb-3 text-lg font-bold">Tus predicciones</h2>
-                  <PredictionForm entryId={myEntry.id} matches={matchRows} />
-                </div>
-              </div>
+            ) : boletos.length > 0 ? (
+              <MyBoletos
+                boletos={boletos}
+                teams={teams}
+                championEditable={championEditable}
+                bonusPoints={rules.champion ?? 10}
+                poolId={pool.id}
+                isPronostico={!!pool.matchId}
+                entryFeeCents={pool.entryFeeCents}
+                maxEntries={pool.maxEntriesPerUser}
+              />
             ) : pool.status !== "OPEN" ? (
               <div className="card text-gray-300">Esta quiniela ya no admite inscripciones.</div>
             ) : (

@@ -69,7 +69,7 @@ async function main() {
         status: "OPEN",
         entryFeeCents: feeCents,
         rakePercent: RAKE_PERCENT,
-        maxEntriesPerUser: 1,
+        maxEntriesPerUser: 50, // varios boletos por jugador (cada uno con su campeón)
         prizeSplit: JSON.stringify([60, 30, 10]),
         scoringRules: JSON.stringify({ exact: 3, outcome: 1, champion: 10 }),
       },

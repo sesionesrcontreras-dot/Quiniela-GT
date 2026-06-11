@@ -21,8 +21,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (entry.userId !== session.uid) return fail("Este boleto no es tuyo", 403);
     if (entry.status !== "ACTIVE") return fail("El boleto no esta activo", 409);
     if (entry.pool.matchId) return fail("Los pronosticos de un partido no llevan campeon", 400);
-    if (entry.pool.tournament.startsAt <= new Date()) {
-      return fail("El torneo ya arranco: la eleccion de campeon esta cerrada", 409);
+    if (entry.pool.status !== "OPEN") {
+      return fail("La quiniela ya cerro: la eleccion de campeon esta cerrada", 409);
     }
 
     // El equipo debe existir en el calendario del torneo (anti datos basura)
