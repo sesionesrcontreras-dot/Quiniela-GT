@@ -11,7 +11,7 @@ const METHODS = [
 
 export default function RechargeForm() {
   const router = useRouter();
-  const [amount, setAmount] = useState(100);
+  const [amount, setAmount] = useState("100");
   const [method, setMethod] = useState("BANK_TRANSFER");
   const [reference, setReference] = useState("");
   const [msg, setMsg] = useState("");
@@ -58,11 +58,15 @@ export default function RechargeForm() {
     e.preventDefault();
     setError("");
     setMsg("");
+    const monto = Number(amount);
+    if (!Number.isFinite(monto) || monto < 1) {
+      return setError("Escribe un monto válido (mínimo Q1).");
+    }
     setLoading(true);
     const res = await fetch("/api/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amountQuetzales: Number(amount), method, reference: reference || undefined }),
+      body: JSON.stringify({ amountQuetzales: monto, method, reference: reference || undefined }),
     });
     const data = await res.json();
     setLoading(false);
@@ -101,16 +105,18 @@ export default function RechargeForm() {
   }
 
   return (
-    <form onSubmit={submit} className="card space-y-4">
+    <form onSubmit={submit} noValidate className="card space-y-4">
       <h3 className="font-bold">Recargar saldo</h3>
       <div>
         <label className="label">Monto (Q)</label>
         <input
           type="number"
           min={1}
+          inputMode="numeric"
           className="field mt-1"
           value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Ej. 100"
           required
         />
       </div>
